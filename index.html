@@ -453,7 +453,7 @@
                             <tr>
                                 <th onclick="sortTable(this)">ì§ì  â</th>
                                 <th onclick="sortTable(this)">êµ¬ë¶ â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">Ü ì¸ëì â</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">ì´ ì¸ëì â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">ê³µì¤ì â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">ìì£¼ ì¸ëì â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">OCCì¨ â</th>
@@ -501,7 +501,7 @@
                                 <th onclick="sortTable(this)">ê³ì½ê¸°ê° â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">ë³´ì¦ê¸ â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">ìëë£ â</th>
-                                         <th onclick="sortTable(this)" style="text-align:right;">ê´ë¦¬ë¹ â</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">ê´ë¦¬ë¹ â</th>
                                 <th onclick="sortTable(this)">ê³ì½íí â</th>
                                 <th onclick="sortTable(this)">ìí â</th>
                             </tr>
@@ -515,7 +515,7 @@
 
             <!-- Tour & Inquiry Records Section -->
             <section class="card p-6 mb-8">
-                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">í¬ì´/ë¬¸ì ê¸°ë¡</h2>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">í¬ì´/ë§²ì ê¸°ë¡</h2>
                 <div class="tabs mb-4">
                     <button class="tab-button active" onclick="switchTab('tourLegacy', this)">ê¸°ì¡´ ê¸°ë¡</button>
                     <button class="tab-button" onclick="switchTab('tourNew', this)">ì ê· ê¸°ë¡</button>
@@ -787,7 +787,7 @@
                     ...allData.tour_records.map(t => t.branch),
                     ...allData.tour_records_new.map(t => t.branch),
                     ...allData.voc.map(v => v.branch)
-                ]).filter(Boolean)].sort();
+                ])].filter(Boolean).sort();
 
                 updateKPIs();
                 updateVacancy();
