@@ -453,7 +453,7 @@
                             <tr>
                                 <th onclick="sortTable(this)">ì§ì  â</th>
                                 <th onclick="sortTable(this)">êµ¬ë¶ â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">ì´ ì¸ëì â</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">Ü ì¸ëì â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">ê³µì¤ì â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">ìì£¼ ì¸ëì â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">OCCì¨ â</th>
@@ -501,7 +501,7 @@
                                 <th onclick="sortTable(this)">ê³ì½ê¸°ê° â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">ë³´ì¦ê¸ â</th>
                                 <th onclick="sortTable(this)" style="text-align:right;">ìëë£ â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">ê´ë¦¬ë¹ â</th>
+                                         <th onclick="sortTable(this)" style="text-align:right;">ê´ë¦¬ë¹ â</th>
                                 <th onclick="sortTable(this)">ê³ì½íí â</th>
                                 <th onclick="sortTable(this)">ìí â</th>
                             </tr>
@@ -631,7 +631,7 @@
         const SUPABASE_URL = 'https://bqzzszmhzfkcbgoyavcn.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpzem1oemZrY2Jnb3lhdmNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5ODU2NTAsImV4cCI6MjA4OTU2MTY1MH0.ScflftO0AwvhfKvr77JuxM4-QEaaLJJNZ-OTYHPU_3Q';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // State Management
         let allData = {
@@ -754,11 +754,11 @@
             try {
                 // Core tables (must exist) - use range to bypass 1000 row default limit
                 const [contracts, vacancy, tours, voc, branchesRes] = await Promise.all([
-                    supabase.from('contracts').select('*').range(0, 4999),
-                    supabase.from('vacancy').select('*'),
-                    supabase.from('tour_records').select('*').range(0, 4999),
-                    supabase.from('voc').select('*'),
-                    supabase.from('branches').select('*')
+                    sbClient.from('contracts').select('*').range(0, 4999),
+                    sbClient.from('vacancy').select('*'),
+                    sbClient.from('tour_records').select('*').range(0, 4999),
+                    sbClient.from('voc').select('*'),
+                    sbClient.from('branches').select('*')
                 ]);
 
                 if (contracts.error) throw contracts.error;
@@ -769,7 +769,7 @@
                 // Optional table - tour_records_new (may not exist yet)
                 let toursNewData = [];
                 try {
-                    const toursNew = await supabase.from('tour_records_new').select('*');
+                    const toursNew = await sbClient.from('tour_records_new').select('*');
                     if (!toursNew.error) toursNewData = toursNew.data || [];
                 } catch(e) { /* table not yet created */ }
 
