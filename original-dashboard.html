@@ -565,8 +565,16 @@
 
   .animate-in { animation: fadeInUp 0.4s ease forwards; }
 </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+    <div class="loading-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.9);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:1rem;">
+      <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.2);border-top-color:#60a5fa;border-radius:50%;animation:spin 1s linear infinite;"></div>
+      <p style="color:#94a3b8;font-size:0.9rem;">Supabase에서 데이터 로딩 중...</p>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    </div>
+
 
 <header>
   <div class="logo-area">
@@ -1095,108 +1103,139 @@
 
 <script>
 // ==================== DATA ====================
-const RAW = {
-  "선정릉": {
-    "total": 66,
-    "입주현황": { "재실": 52, "공실": 6, "정보없음": 5, "입주대기": 3 },
-    "계약상태": { "신규계약": 28, "재계약": 26, "정보없음": 12 },
-    "성별": { "정보없음": 18, "여": 16, "남": 15, "사업자": 11, "공실(해당없음)": 6 },
-    "국적": { "정보없음": 66 },
-    "직업": { "직장인": 51, "학생/학교": 9, "정보없음": 6 },
-    "계약기간": { "12개월 이하": 31, "6개월 이하": 12, "정보없음": 10, "12개월 초과": 6, "1개월 이하": 5, "3개월 이하": 2 },
-    "연령대": { "30대": 14, "50대": 4, "20대": 4, "60대 이상": 2, "40대": 7 }
-  },
-  "남영": {
-    "total": 64,
-    "입주현황": { "재실": 56, "공실": 4, "입주대기": 4 },
-    "계약상태": { "신규계약": 37, "재계약": 19, "정보없음": 8 },
-    "성별": { "남": 22, "여": 18, "정보없음": 14, "사업자": 7, "공실(해당없음)": 3 },
-    "국적": { "정보없음": 64 },
-    "직업": { "직장인": 49, "학생/학교": 12, "정보없음": 3 },
-    "계약기간": { "12개월 이하": 46, "정보없음": 9, "6개월 이하": 4, "12개월 초과": 3, "3개월 이하": 2 },
-    "연령대": { "30대": 11, "20대": 14, "40대": 6, "50대": 7, "60대 이상": 1 }
-  },
-  "망원": {
-    "total": 18,
-    "입주현황": { "재실": 12, "공실": 6 },
-    "계약상태": { "신규계약": 6, "재계약": 6, "정보없음": 6 },
-    "성별": { "여": 7, "남": 3, "사업자": 3, "공실(해당없음)": 3, "정보없음": 2 },
-    "국적": { "정보없음": 18 },
-    "직업": { "직장인": 12, "학생/학교": 3, "정보없음": 3 },
-    "계약기간": { "12개월 이하": 6, "정보없음": 6, "6개월 이하": 4, "3개월 이하": 1, "1개월 이하": 1 },
-    "연령대": { "30대": 4, "20대": 4, "50대": 2 }
-  },
-  "안암": {
-    "total": 60,
-    "입주현황": { "재실": 41, "입주대기": 19 },
-    "계약상태": { "신규계약": 47, "정보없음": 8, "재계약": 5 },
-    "성별": { "여": 39, "남": 12, "정보없음": 9 },
-    "국적": { "외국인": 35, "내국인": 15, "법인": 9, "정보없음": 1 },
-    "직업": { "학생/학교": 45, "정보없음": 10, "직장인": 5 },
-    "계약기간": { "6개월 이하": 25, "12개월 이하": 19, "정보없음": 8, "3개월 이하": 5, "1개월 이하": 3 },
-    "연령대": {}
-  },
-  "아코모가산바이홈즈-101동": {
-    "total": 39,
-    "입주현황": { "재실": 20, "정보없음": 11, "입주대기": 4, "퇴실": 3, "계약취소": 1 },
-    "계약상태": { "정보없음": 39 },
-    "성별": { "정보없음": 17, "남": 14, "여": 8 },
-    "국적": { "내국인": 24, "정보없음": 12, "외국인": 3 },
-    "직업": { "직장인": 21, "정보없음": 14, "학생/학교": 4 },
-    "계약기간": { "12개월 이하": 19, "정보없음": 12, "12개월 초과": 5, "3개월 이하": 1, "1개월 이하": 1, "6개월 이하": 1 },
-    "연령대": {}
-  },
-  "아코모가산바이홈즈-201동": {
-    "total": 41,
-    "입주현황": { "재실": 33, "정보없음": 4, "입주대기": 2, "계약취소": 2 },
-    "계약상태": { "정보없음": 41 },
-    "성별": { "여": 32, "남": 5, "정보없음": 4 },
-    "국적": { "내국인": 21, "외국인": 17, "정보없음": 3 },
-    "직업": { "직장인": 29, "정보없음": 7, "학생/학교": 5 },
-    "계약기간": { "12개월 이하": 26, "12개월 초과": 11, "정보없음": 4 },
-    "연령대": {}
-  },
-  "아코모회기바이홈즈": {
-    "total": 152,
-    "입주현황": { "재실": 60, "정보없음": 56, "입주대기": 26, "퇴실": 9, "계약취소": 1 },
-    "계약상태": { "정보없음": 147, "재계약": 3, "중도퇴실": 2 },
-    "성별": { "정보없음": 71, "여": 57, "남": 24 },
-    "국적": { "외국인": 64, "정보없음": 57, "내국인": 31 },
-    "직업": { "정보없음": 68, "학생/학교": 54, "기타": 11, "직장인": 9, "교육/훈련": 8, "이사/인테리어": 2 },
-    "계약기간": { "정보없음": 59, "12개월 이하": 58, "6개월 이하": 18, "3개월 이하": 15, "1개월 이하": 2 },
-    "연령대": {}
-  },
-  "원효로 240": {
-    "total": 17,
-    "입주현황": { "정보없음": 17 },
-    "계약상태": { "정보없음": 17 },
-    "성별": { "정보없음": 17 },
-    "국적": { "정보없음": 17 },
-    "직업": { "정보없음": 17 },
-    "계약기간": { "정보없음": 17 },
-    "연령대": {}
-  }
-};
+let RAW = {};
+    let BRANCHES = [];
+    const BRANCH_COLORS = {
+      "선정릉":"#f472b6","남영":"#60a5fa","망원":"#34d399","안암":"#a78bfa",
+      "아코모가산바이홈즈":"#fbbf24","아코모회기바이홈즈":"#f87171","원효로 240":"#2dd4bf",
+      "아코모가산바이홈즈-101동":"#fb923c","아코모가산바이홈즈-201동":"#fbbf24"
+    };
 
-const BRANCHES = Object.keys(RAW);
-const BRANCH_COLORS = [
-  '#4fc3f7','#f48fb1','#a5d6a7','#ffcc80','#ce93d8','#80deea','#ef9a9a','#ffe082'
-];
+    const SUPABASE_URL = 'https://bqzzszmhzfkcbgoyavcn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxenpzem1oemZrY2Jnb3lhdmNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5ODU2NTAsImV4cCI6MjA4OTU2MTY1MH0.ScflftO0AwvhfKvr77JuxM4-QEaaLJJNZ-OTYHPU_3Q';
+    const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ==================== HELPERS ====================
-function pct(val, total) {
-  if (!total) return '0%';
-  return (val / total * 100).toFixed(1) + '%';
-}
+    async function fetchSupabaseData() {
+      const [contractsRes, vacancyRes, toursRes] = await Promise.all([
+        sbClient.from('contracts').select('branch,status,renewal_type,contract_type,contract_start,contract_end').limit(5000),
+        sbClient.from('vacancy').select('*'),
+        sbClient.from('tour_records').select('branch,gender,nationality,age_group,move_in_purpose').limit(5000)
+      ]);
+      const contracts = contractsRes.data || [];
+      const vacancy = vacancyRes.data || [];
+      const tours = toursRes.data || [];
 
-function sum(obj, excludeKeys=[]) {
-  return Object.entries(obj).reduce((s,[k,v]) => excludeKeys.includes(k) ? s : s+v, 0);
-}
+      // Get unique branches from vacancy
+      const branchSet = new Set();
+      vacancy.forEach(v => branchSet.add(v.branch));
+      contracts.forEach(c => { if(c.branch) branchSet.add(c.branch); });
+      BRANCHES = Array.from(branchSet).sort();
 
-function getOrZero(obj, key) { return obj[key] || 0; }
+      // Build RAW per branch
+      BRANCHES.forEach(b => {
+        const bVac = vacancy.filter(v => v.branch === b);
+        const totalUnits = bVac.reduce((s,v) => s + (v.total_units||0), 0);
+        const occupied = bVac.reduce((s,v) => s + (v.occupied_units||0), 0);
+        const vacantAvail = bVac.reduce((s,v) => s + (v.vacant_available||0), 0);
+        const vacantPend = bVac.reduce((s,v) => s + (v.vacant_pending||0), 0);
 
-function sumAll(data) {
-  const result = {};
+        const bContracts = contracts.filter(c => c.branch === b && (c.status === '계약 완료' || c.status === '연장 계약'));
+        const bTours = tours.filter(t => t.branch === b);
+
+        // 입주현황
+        const occStatus = { '재실': occupied, '공실': vacantAvail, '입주대기': vacantPend };
+        if(totalUnits === 0 && bContracts.length > 0) { occStatus['재실'] = bContracts.length; }
+
+        // 계약상태
+        const contractStatus = {};
+        bContracts.forEach(c => {
+          let key = '정보없음';
+          if(c.renewal_type === '재계약(연장/과거 고객)') key = '재계약';
+          else if(c.renewal_type === '중도퇴실') key = '중도퇴실';
+          else if(c.status === '연장 계약') key = '재계약';
+          else key = '신규계약';
+          contractStatus[key] = (contractStatus[key]||0) + 1;
+        });
+
+        // 성별 from tours
+        const genderMap = {};
+        bTours.forEach(t => {
+          const g = t.gender || '정보없음';
+          genderMap[g] = (genderMap[g]||0) + 1;
+        });
+        if(Object.keys(genderMap).length === 0) genderMap['정보없음'] = totalUnits || bContracts.length;
+
+        // 국적 from tours
+        const natMap = {};
+        bTours.forEach(t => {
+          const n = t.nationality || '정보없음';
+          natMap[n] = (natMap[n]||0) + 1;
+        });
+        if(Object.keys(natMap).length === 0) natMap['정보없음'] = totalUnits || bContracts.length;
+
+        // 직업 from tours (move_in_purpose mapped)
+        const jobMap = {};
+        bTours.forEach(t => {
+          let j = '정보없음';
+          const p = t.move_in_purpose;
+          if(p === '직주근접') j = '직장인';
+          else if(p === '학업') j = '학생/학교';
+          else if(p === '독립' || p === '기존집 만료' || p === '리모델링') j = '직장인';
+          else if(p === '단기 한국 체류') j = '외국인';
+          else if(p === '코리빙 체험') j = '기타';
+          else if(p) j = '기타';
+          jobMap[j] = (jobMap[j]||0) + 1;
+        });
+        if(Object.keys(jobMap).length === 0) jobMap['정보없음'] = totalUnits || bContracts.length;
+
+        // 계약기간
+        const periodMap = {};
+        bContracts.forEach(c => {
+          if(!c.contract_start || !c.contract_end) { periodMap['정보없음'] = (periodMap['정보없음']||0)+1; return; }
+          const days = (new Date(c.contract_end) - new Date(c.contract_start)) / 86400000;
+          let key = '정보없음';
+          if(days <= 31) key = '1개월 이하';
+          else if(days <= 93) key = '3개월 이하';
+          else if(days <= 186) key = '6개월 이하';
+          else if(days <= 366) key = '12개월 이하';
+          else key = '12개월 초과';
+          periodMap[key] = (periodMap[key]||0) + 1;
+        });
+
+        // 연령대 from tours
+        const ageMap = {};
+        bTours.forEach(t => {
+          const a = t.age_group || '정보없음';
+          ageMap[a] = (ageMap[a]||0) + 1;
+        });
+        if(Object.keys(ageMap).length === 0) ageMap['정보없음'] = totalUnits || bContracts.length;
+
+        RAW[b] = {
+          total: totalUnits || bContracts.length,
+          '입주현황': occStatus,
+          '계약상태': contractStatus,
+          '성별': genderMap,
+          '국적': natMap,
+          '직업': jobMap,
+          '계약기간': periodMap,
+          '연령대': ageMap
+        };
+      });
+
+      return { branches: BRANCHES.length, totalContracts: contracts.length };
+    }
+
+    async function initDashboard() {
+      document.querySelector('.loading-overlay') && (document.querySelector('.loading-overlay').style.display = 'flex');
+      try {
+        const stats = await fetchSupabaseData();
+        console.log('Supabase data loaded:', stats);
+      } catch(e) {
+        console.error('Supabase fetch failed:', e);
+      }
+      document.querySelector('.loading-overlay') && (document.querySelector('.loading-overlay').style.display = 'none');
+      // --- Original rendering code ---
+
   BRANCHES.forEach(b => {
     Object.entries(data[b]).forEach(([k,v]) => {
       result[k] = (result[k]||0) + v;
@@ -2435,6 +2474,9 @@ window.addEventListener('load', () => {
   initOverview();
   initialized['overview'] = true;
 });
+
+    }
+    initDashboard();
 </script>
 </body>
 </html>
