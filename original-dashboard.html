@@ -1236,12 +1236,28 @@ let RAW = {};
       document.querySelector('.loading-overlay') && (document.querySelector('.loading-overlay').style.display = 'none');
       // --- Original rendering code ---
 
-  BRANCHES.forEach(b => {
+      // ==================== HELPERS ====================
+    function pct(val, total) {
+      if (!total) return '0%';
+      return (val / total * 100).toFixed(1) + '%';
+    }
+
+    function sum(obj, excludeKeys=[]) {
+      return Object.entries(obj).reduce((s,[k,v]) => excludeKeys.includes(k) ? s : s+v, 0);
+    }
+
+    function getOrZero(obj, key) { return obj[key] || 0; }
+
+    function sumAll(data) {
+      const result = {};
+BRANCHES.forEach(b => {
     Object.entries(data[b]).forEach(([k,v]) => {
       result[k] = (result[k]||0) + v;
     });
   });
   return result;
+    }
+
 const chartDefaults = {
   plugins: {
     legend: {
