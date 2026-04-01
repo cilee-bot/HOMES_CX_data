@@ -2484,10 +2484,9 @@ function renderInsightCards() {
 }
 
 // Init overview on load
-window.addEventListener('load', () => {
-  initOverview();
-  initialized['overview'] = true;
-});
+    // Init overview directly (async context - load event already fired)
+    initOverview();
+    initialized['overview'] = true;
 
     }
     initDashboard();
