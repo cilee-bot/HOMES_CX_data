@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOMES ê³ ê°íí© ëìë³´ë</title>
+    <title>HOMES 고객현황 대시보드</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,7 +16,7 @@
         tailwind.config = {
             theme: {
                 fontFamily: {
-                    sans: ['Inter', 'sans-serif'],
+                    sans: ['Noto Sans KR', 'Inter', 'sans-serif'],
                 },
                 extend: {
                     colors: {
@@ -52,7 +52,7 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
@@ -245,7 +245,7 @@
             border: 1px solid;
             border-radius: 0.375rem;
             font-size: 0.875rem;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
             transition: all 0.3s ease;
         }
 
@@ -402,15 +402,16 @@
         <header id="header" class="border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-50">HOMES ê³ ê°íí© ëìë³´ë</h1>
-                    <p id="lastSync" class="text-sm text-slate-500 dark:text-slate-400 mt-1">ë§ì§ë§ ëê¸°í: ë¡ë ì¤...</p>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-50">HOMES 고객현황 대시보드</h1>
+                    <p id="lastSync" class="text-sm text-slate-500 dark:text-slate-400 mt-1">마지막 동기화: 로드 중...</p>
                 </div>
                 <div class="flex items-center gap-3">
+                    <a href="original-dashboard.html" class="btn btn-secondary flex items-center gap-2" style="text-decoration:none;color:inherit;"><span>&#x1F4CA;</span> <span>Original Dashboard</span></a>
                     <button id="syncBtn" class="btn btn-primary flex items-center gap-2" onclick="syncData()">
-                        <span id="syncIcon">â»</span>
-                        <span>ëê¸°í</span>
+                        <span id="syncIcon">↻</span>
+                        <span>동기화</span>
                     </button>
-                    <button id="themeTgl" class="btn btn-secondary" onclick="toggleTheme()">ð</button>
+                    <button id="themeTgl" class="btn btn-secondary" onclick="toggleTheme()">🌙</button>
                 </div>
             </div>
         </header>
@@ -420,22 +421,22 @@
             <!-- KPI Summary -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div class="kpi-card">
-                    <div class="kpi-label">ì´ ê³ì½ ê±´ì</div>
+                    <div class="kpi-label">총 계약 건수</div>
                     <div class="kpi-value" id="kpiTotalContracts">-</div>
                     <div class="text-xs text-slate-500 dark:text-slate-400">contracts</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-label">íì± ê³ì½</div>
+                    <div class="kpi-label">활성 계약</div>
                     <div class="kpi-value" id="kpiActiveContracts">-</div>
                     <div class="text-xs text-slate-500 dark:text-slate-400">active</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-label">ê¸ì í¬ì´/ë¬¸ì</div>
+                    <div class="kpi-label">금월 투어/문의</div>
                     <div class="kpi-value" id="kpiMonthlyTours">-</div>
                     <div class="text-xs text-slate-500 dark:text-slate-400">tours</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-label">ì ì²´ OCCì¨</div>
+                    <div class="kpi-label">전체 OCC율</div>
                     <div class="kpi-value" id="kpiOccRate">-</div>
                     <div class="text-xs text-slate-500 dark:text-slate-400">occupancy</div>
                 </div>
@@ -444,23 +445,23 @@
             <!-- Vacancy by Branch Section -->
             <section class="card p-6 mb-8">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50">ì§ì ë³ ê³µì¤ íí©</h2>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50">지점별 공실 현황</h2>
                     <div id="vacancyLoading" class="loading" style="display:none;"></div>
                 </div>
                 <div class="table-container">
                     <table id="vacancyTable">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(this)">ì§ì  â</th>
-                                <th onclick="sortTable(this)">êµ¬ë¶ â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">ì´ ì¸ëì â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">ê³µì¤ì â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">ìì£¼ ì¸ëì â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">OCCì¨ â</th>
+                                <th onclick="sortTable(this)">지점 ↕</th>
+                                <th onclick="sortTable(this)">구분 ↕</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">총 세대수 ↕</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">공실수 ↕</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">입주 세대수 ↕</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">OCC율 ↕</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="6" class="empty-state">ë°ì´í° ë¡ë ì¤...</td></tr>
+                            <tr><td colspan="6" class="empty-state">데이터 로드 중...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -469,45 +470,45 @@
 
             <!-- Contracts Section -->
             <section class="card p-6 mb-8">
-                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">ê³ì½ íí©</h2>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">계약 현황</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">ì§ì </label>
+                        <label class="block text-sm font-medium mb-2">지점</label>
                         <select id="contractBranchFilter" class="input w-full" onchange="filterContracts()">
-                            <option value="">ì ì²´</option>
+                            <option value="">전체</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">ìí</label>
+                        <label class="block text-sm font-medium mb-2">상태</label>
                         <select id="contractStatusFilter" class="input w-full" onchange="filterContracts()">
-                            <option value="">ì ì²´</option>
-                            <option value="ê³ì½ ìë£">ê³ì½ ìë£</option>
-                            <option value="ì°ì¥ ê³ì½">ì°ì¥ ê³ì½</option>
-                            <option value="ì¢ë£">ì¢ë£</option>
+                            <option value="">전체</option>
+                            <option value="계약 완료">계약 완료</option>
+                            <option value="연장 계약">연장 계약</option>
+                            <option value="종료">종료</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">ì´ë¦ ê²ì</label>
-                        <input type="text" id="contractNameSearch" class="input w-full" placeholder="ì´ë¦ì¼ë¡ ê²ì" onkeyup="filterContracts()">
+                        <label class="block text-sm font-medium mb-2">이름 검색</label>
+                        <input type="text" id="contractNameSearch" class="input w-full" placeholder="이름으로 검색" onkeyup="filterContracts()">
                     </div>
                 </div>
                 <div class="table-container">
                     <table id="contractsTable">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(this)">ì§ì  â</th>
-                                <th onclick="sortTable(this)">í¸ì¤ â</th>
-                                <th onclick="sortTable(this)">ì´ë¦ â</th>
-                                <th onclick="sortTable(this)">ê³ì½ê¸°ê° â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">ë³´ì¦ê¸ â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">ìëë£ â</th>
-                                <th onclick="sortTable(this)" style="text-align:right;">ê´ë¦¬ë¹ â</th>
-                                <th onclick="sortTable(this)">ê³ì½íí â</th>
-                                <th onclick="sortTable(this)">ìí â</th>
+                                <th onclick="sortTable(this)">지점 ↕</th>
+                                <th onclick="sortTable(this)">호실 ↕</th>
+                                <th onclick="sortTable(this)">이름 ↕</th>
+                                <th onclick="sortTable(this)">계약기간 ↕</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">보증금 ↕</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">임대료 ↕</th>
+                                <th onclick="sortTable(this)" style="text-align:right;">관리비 ↕</th>
+                                <th onclick="sortTable(this)">계약형태 ↕</th>
+                                <th onclick="sortTable(this)">상태 ↕</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="9" class="empty-state">ë°ì´í° ë¡ë ì¤...</td></tr>
+                            <tr><td colspan="9" class="empty-state">데이터 로드 중...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -515,23 +516,23 @@
 
             <!-- Tour & Inquiry Records Section -->
             <section class="card p-6 mb-8">
-                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">í¬ì´/ë§²ì ê¸°ë¡</h2>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">투어/맲의 기록</h2>
                 <div class="tabs mb-4">
-                    <button class="tab-button active" onclick="switchTab('tourLegacy', this)">ê¸°ì¡´ ê¸°ë¡</button>
-                    <button class="tab-button" onclick="switchTab('tourNew', this)">ì ê· ê¸°ë¡</button>
+                    <button class="tab-button active" onclick="switchTab('tourLegacy', this)">기존 기록</button>
+                    <button class="tab-button" onclick="switchTab('tourNew', this)">신규 기록</button>
                 </div>
 
                 <!-- Legacy Records -->
                 <div id="tourLegacy" class="tab-content active">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                         <div>
-                            <label class="block text-sm font-medium mb-2">ì§ì </label>
+                            <label class="block text-sm font-medium mb-2">지점</label>
                             <select id="tourBranchFilter" class="input w-full" onchange="filterTourRecords()">
-                                <option value="">ì ì²´</option>
+                                <option value="">전체</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">ê¸°ê°</label>
+                            <label class="block text-sm font-medium mb-2">기간</label>
                             <input type="date" id="tourDateFilter" class="input w-full" onchange="filterTourRecords()">
                         </div>
                     </div>
@@ -539,17 +540,17 @@
                         <table id="tourTable">
                             <thead>
                                 <tr>
-                                    <th onclick="sortTable(this)">ë ì§ â</th>
-                                    <th onclick="sortTable(this)">ì§ì  â</th>
-                                    <th onclick="sortTable(this)">ì´ë¦ â</th>
-                                    <th onclick="sortTable(this)">ì°ë½ì² â</th>
-                                    <th onclick="sortTable(this)">ë°©ë¬¸ë°©ì â</th>
-                                    <th onclick="sortTable(this)">ì§íìí© â</th>
-                                    <th onclick="sortTable(this)">ê³ì½ì¬ë¶ â</th>
+                                    <th onclick="sortTable(this)">날짜 ↕</th>
+                                    <th onclick="sortTable(this)">지점 ↕</th>
+                                    <th onclick="sortTable(this)">이름 ↕</th>
+                                    <th onclick="sortTable(this)">연락처 ↕</th>
+                                    <th onclick="sortTable(this)">방문방식 ↕</th>
+                                    <th onclick="sortTable(this)">진행상황 ↕</th>
+                                    <th onclick="sortTable(this)">계약여부 ↕</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td colspan="7" class="empty-state">ë°ì´í° ë¡ë ì¤...</td></tr>
+                                <tr><td colspan="7" class="empty-state">데이터 로드 중...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -559,13 +560,13 @@
                 <div id="tourNew" class="tab-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                         <div>
-                            <label class="block text-sm font-medium mb-2">ì§ì </label>
+                            <label class="block text-sm font-medium mb-2">지점</label>
                             <select id="tourNewBranchFilter" class="input w-full" onchange="filterTourNewRecords()">
-                                <option value="">ì ì²´</option>
+                                <option value="">전체</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">ê¸°ê°</label>
+                            <label class="block text-sm font-medium mb-2">기간</label>
                             <input type="date" id="tourNewDateFilter" class="input w-full" onchange="filterTourNewRecords()">
                         </div>
                     </div>
@@ -573,17 +574,17 @@
                         <table id="tourNewTable">
                             <thead>
                                 <tr>
-                                    <th onclick="sortTable(this)">ë ì§ â</th>
-                                    <th onclick="sortTable(this)">ì§ì  â</th>
-                                    <th onclick="sortTable(this)">ì´ë¦ â</th>
-                                    <th onclick="sortTable(this)">ì°ë½ì² â</th>
-                                    <th onclick="sortTable(this)">ì¹´íê³ ë¦¬ â</th>
-                                    <th onclick="sortTable(this)">ì§íìí© â</th>
-                                    <th onclick="sortTable(this)">ê³ì½ì¬ë¶ â</th>
+                                    <th onclick="sortTable(this)">날짜 ↕</th>
+                                    <th onclick="sortTable(this)">지점 ↕</th>
+                                    <th onclick="sortTable(this)">이름 ↕</th>
+                                    <th onclick="sortTable(this)">연락처 ↕</th>
+                                    <th onclick="sortTable(this)">카테고리 ↕</th>
+                                    <th onclick="sortTable(this)">진행상황 ↕</th>
+                                    <th onclick="sortTable(this)">계약여부 ↕</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td colspan="7" class="empty-state">ë°ì´í° ë¡ë ì¤...</td></tr>
+                                <tr><td colspan="7" class="empty-state">데이터 로드 중...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -592,23 +593,23 @@
 
             <!-- VOC Section -->
             <section class="card p-6 mb-8">
-                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">VOC íí©</h2>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">VOC 현황</h2>
                 <div class="table-container">
                     <table id="vocTable">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(this)">ì ìì¼ â</th>
-                                <th onclick="sortTable(this)">ì§ì  â</th>
-                                <th onclick="sortTable(this)">í¸ì¤ â</th>
-                                <th onclick="sortTable(this)">ë¬¸ìì â</th>
-                                <th onclick="sortTable(this)">ëë¶ë¥ â</th>
-                                <th onclick="sortTable(this)">ìë¶ë¥ â</th>
-                                <th onclick="sortTable(this)">ì¤ìë â</th>
-                                <th onclick="sortTable(this)">ì²ë¦¬ìí â</th>
+                                <th onclick="sortTable(this)">접수일 ↕</th>
+                                <th onclick="sortTable(this)">지점 ↕</th>
+                                <th onclick="sortTable(this)">호실 ↕</th>
+                                <th onclick="sortTable(this)">문의자 ↕</th>
+                                <th onclick="sortTable(this)">대분류 ↕</th>
+                                <th onclick="sortTable(this)">소분류 ↕</th>
+                                <th onclick="sortTable(this)">중요도 ↕</th>
+                                <th onclick="sortTable(this)">처리상태 ↕</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="8" class="empty-state">ë°ì´í° ë¡ë ì¤...</td></tr>
+                            <tr><td colspan="8" class="empty-state">데이터 로드 중...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -618,9 +619,9 @@
         <!-- Footer -->
         <footer id="footer" class="border-t border-slate-200 dark:border-slate-700 mt-12">
             <div class="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
-                <p class="text-sm text-slate-500 dark:text-slate-400">Â© 2026 HOMES Global | Powered by Supabase</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">© 2026 HOMES Global | Powered by Supabase</p>
                 <button id="syncSheetBtn" class="btn btn-secondary text-xs" onclick="triggerSyncSheets()">
-                    <span>ëê¸°í ìì</span>
+                    <span>동기화 시작</span>
                 </button>
             </div>
         </footer>
@@ -653,8 +654,8 @@
         }
 
         function formatMoney(value) {
-            if (!value) return 'â©0';
-            return 'â©' + parseInt(value).toLocaleString('ko-KR');
+            if (!value) return '₩0';
+            return '₩' + parseInt(value).toLocaleString('ko-KR');
         }
 
         function formatPercent(value) {
@@ -664,11 +665,11 @@
 
         function getStatusBadge(status) {
             let badgeClass = 'badge-blue';
-            if (status === 'ìë£') {
+            if (status === '완료') {
                 badgeClass = 'badge-green';
-            } else if (status === 'ì§íì¤') {
+            } else if (status === '진행중') {
                 badgeClass = 'badge-yellow';
-            } else if (status === 'ê¸´ê¸') {
+            } else if (status === '긴급') {
                 badgeClass = 'badge-red';
             }
             return `<span class="badge ${badgeClass}">${status}</span>`;
@@ -701,14 +702,14 @@
             const body = document.body;
             body.classList.toggle('dark-mode');
             body.classList.toggle('light-mode');
-            document.getElementById('themeTgl').textContent = body.classList.contains('dark-mode') ? 'âï¸' : 'ð';
+            document.getElementById('themeTgl').textContent = body.classList.contains('dark-mode') ? '☀️' : '🌙';
             localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
         }
 
         function updateLastSync() {
             const now = new Date();
             const timeStr = now.toLocaleString('ko-KR');
-            document.getElementById('lastSync').textContent = `ë§ì§ë§ ëê¸°í: ${timeStr}`;
+            document.getElementById('lastSync').textContent = `마지막 동기화: ${timeStr}`;
         }
 
         // Table Sorting
@@ -798,10 +799,10 @@
                 populateFilters();
                 updateLastSync();
 
-                showToast('ë°ì´í° ëê¸°í ìë£');
+                showToast('데이터 동기화 완료');
             } catch (error) {
                 console.error('Error loading data:', error);
-                showToast('ë°ì´í° ë¡ë ì¤í¨: ' + error.message, 'error');
+                showToast('데이터 로드 실패: ' + error.message, 'error');
             }
         }
 
@@ -809,7 +810,7 @@
         function updateKPIs() {
             const totalContracts = allData.contracts.length;
             const activeContracts = allData.contracts.filter(c =>
-                c.status === 'ê³ì½ ìë£' || c.status === 'ì°ì¥ ê³ì½'
+                c.status === '계약 완료' || c.status === '연장 계약'
             ).length;
 
             const currentMonth = new Date();
@@ -835,7 +836,7 @@
             tbody.innerHTML = '';
 
             if (allData.vacancy.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">ë°ì´í° ìì</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">데이터 없음</td></tr>';
                 return;
             }
 
@@ -887,7 +888,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'OCCì¨ (%)',
+                        label: 'OCC율 (%)',
                         data: avgOccRates,
                         backgroundColor: '#3b82f6',
                         borderColor: '#2563eb',
@@ -922,7 +923,7 @@
             tbody.innerHTML = '';
 
             if (contracts.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="empty-state">ë°ì´í° ìì</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="empty-state">데이터 없음</td></tr>';
                 return;
             }
 
@@ -968,7 +969,7 @@
             tbody.innerHTML = '';
 
             if (records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">ë°ì´í° ìì</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">데이터 없음</td></tr>';
                 return;
             }
 
@@ -981,7 +982,7 @@
                     <td>${record.phone || '-'}</td>
                     <td>${record.visit_method || '-'}</td>
                     <td>${getStatusBadge(record.progress_status || '-')}</td>
-                    <td>${record.contract_status === 'ê³ì½' ? 'ê³ì½' : 'ë¯¸ê³ì½'}</td>
+                    <td>${record.contract_status === '계약' ? '계약' : '미계약'}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1010,7 +1011,7 @@
             tbody.innerHTML = '';
 
             if (records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">ë°ì´í° ìì</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">데이터 없음</td></tr>';
                 return;
             }
 
@@ -1023,7 +1024,7 @@
                     <td>${record.phone || '-'}</td>
                     <td>${record.category || '-'}</td>
                     <td>${getStatusBadge(record.progress_status || '-')}</td>
-                    <td>${record.contract_status === 'ê³ì½' ? 'ê³ì½' : 'ë¯¸ê³ì½'}</td>
+                    <td>${record.contract_status === '계약' ? '계약' : '미계약'}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1048,7 +1049,7 @@
             tbody.innerHTML = '';
 
             if (allData.voc.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="empty-state">ë°ì´í° ìì</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state">데이터 없음</td></tr>';
                 return;
             }
 
@@ -1112,14 +1113,14 @@
                 });
 
                 if (response.ok) {
-                    showToast('ëê¸°í ììë¨');
+                    showToast('동기화 시작됨');
                     setTimeout(() => syncData(), 2000);
                 } else {
-                    showToast('ëê¸°í ìì²­ ì¤í¨', 'error');
+                    showToast('동기화 요청 실패', 'error');
                 }
             } catch (error) {
                 console.error('Sync error:', error);
-                showToast('ëê¸°í ì¤ë¥: ' + error.message, 'error');
+                showToast('동기화 오류: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
             }
@@ -1131,7 +1132,7 @@
             if (theme === 'dark') {
                 document.body.classList.remove('light-mode');
                 document.body.classList.add('dark-mode');
-                document.getElementById('themeTgl').textContent = 'âï¸';
+                document.getElementById('themeTgl').textContent = '☀️';
             }
             loadData();
         }
