@@ -598,6 +598,7 @@
   <div class="tab" onclick="showTab('job')">💼 직업 분포</div>
   <div class="tab" onclick="showTab('age')">📅 연령 분포</div>
   <div class="tab" onclick="showTab('contract')">📋 계약 현황</div>
+  <div class="tab" onclick="showTab('customers')" style="color:#4ade80; font-weight:700;">🏠 고객/호실</div>
   <div class="tab" onclick="showTab('compare')">⚖️ 지점 비교</div>
   <div class="tab" onclick="showTab('insight')" style="color:#f59e0b; font-weight:700;">💡 매출 인사이트</div>
 </div>
@@ -844,6 +845,36 @@
   </div>
 </section>
 
+
+<!-- ========== CUSTOMERS ========== -->
+<section id="customers" class="section">
+  <div class="section-heading">🏠 고객/호실 현황</div>
+  <div class="section-desc">현재 활성 계약 고객 및 호실 정보</div>
+  <div style="display:flex;gap:12px;margin:16px 0;flex-wrap:wrap;align-items:center;">
+    <input type="text" id="cust-search" placeholder="검색 (이름/호실/연락처)" oninput="filterCustomerTable()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:14px;width:240px;">
+    <select id="cust-branch" onchange="filterCustomerTable()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:14px;">
+      <option value="">전체 지점</option>
+    </select>
+    <span id="cust-count" style="color:var(--text-muted);font-size:13px;"></span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="data-table" id="cust-table">
+      <thead><tr>
+        <th onclick="sortCustomerTable('branch')" style="cursor:pointer">지점</th>
+        <th onclick="sortCustomerTable('room')" style="cursor:pointer">호실</th>
+        <th>계약자</th>
+        <th>입주자</th>
+        <th>연락처</th>
+        <th onclick="sortCustomerTable('contract_start')" style="cursor:pointer">계약기간</th>
+        <th onclick="sortCustomerTable('rent')" style="cursor:pointer">임대료</th>
+        <th>관리비</th>
+        <th onclick="sortCustomerTable('deposit')" style="cursor:pointer">보증금</th>
+        <th>상태</th>
+      </tr></thead>
+      <tbody id="cust-tbody"></tbody>
+    </table>
+  </div>
+</section>
 <!-- ===== COMPARE ===== -->
 <section id="compare" class="section">
   <div class="section-heading">지점 비교 분석</div>
@@ -1117,11 +1148,12 @@ let RAW = {};
 
     async function fetchSupabaseData() {
       const [contractsRes, vacancyRes, toursRes] = await Promise.all([
-        sbClient.from('contracts').select('branch,status,renewal_type,contract_type,contract_start,contract_end').limit(5000),
+        sbClient.from('contracts').select('branch,room,name,phone,status,renewal_type,contract_type,contract_start,contract_end,rent,deposit,maintenance_fee,resident_name,resident_phone,vehicle_number').limit(5000),
         sbClient.from('vacancy').select('*'),
         sbClient.from('tour_records').select('branch,gender,nationality,age_group,move_in_purpose').limit(5000)
       ]);
       const contracts = contractsRes.data || [];
+      window._allContracts = contracts;
       const vacancy = vacancyRes.data || [];
       const tours = toursRes.data || [];
 
@@ -2049,6 +2081,7 @@ function showTab(name) {
     else if (name === 'job') initJob();
     else if (name === 'age') initAge();
     else if (name === 'contract') initContract();
+      else if (name === 'customers') initCustomers();
     else if (name === 'compare') initCompare();
     else if (name === 'branches') initBranches();
     else if (name === 'insight') initInsight();
@@ -2490,6 +2523,68 @@ function renderInsightCards() {
 
     }
     initDashboard();
+
+
+  // ========== CUSTOMERS ==========
+  var _activeCustomers = [];
+  var _custSort = {key:null, asc:true};
+
+  function initCustomers() {
+    var today = new Date().toISOString().split("T")[0];
+    _activeCustomers = (window._allContracts || []).filter(function(c) {
+      return c.contract_end >= today && (c.status === "계약 완료" || c.status === "연장 계약");
+    });
+    var roomMap = {};
+    _activeCustomers.forEach(function(c) {
+      var key = (c.branch||"") + "||" + (c.room||"");
+      if (!roomMap[key] || c.contract_start > roomMap[key].contract_start) roomMap[key] = c;
+    });
+    _activeCustomers = Object.values(roomMap);
+    var sel = document.getElementById("cust-branch");
+    var branches = [...new Set(_activeCustomers.map(function(c){return c.branch;}).filter(Boolean))].sort();
+    sel.innerHTML = "<option value=\"\">전체 지점</option>" + branches.map(function(b){return "<option>"+b+"</option>";}).join("");
+    filterCustomerTable();
+  }
+
+  function filterCustomerTable() {
+    var q = (document.getElementById("cust-search").value || "").toLowerCase();
+    var br = document.getElementById("cust-branch").value;
+    var filtered = _activeCustomers.filter(function(c) {
+      if (br && c.branch !== br) return false;
+      if (q) {
+        var txt = ((c.name||"")+(c.room||"")+(c.phone||"")+(c.resident_name||"")).toLowerCase();
+        if (txt.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    document.getElementById("cust-count").textContent = "총 " + filtered.length + "건";
+    renderCustomerTable(filtered);
+  }
+
+  function sortCustomerTable(key) {
+    if (_custSort.key === key) _custSort.asc = !_custSort.asc;
+    else { _custSort.key = key; _custSort.asc = true; }
+    filterCustomerTable();
+  }
+
+  function renderCustomerTable(data) {
+    if (_custSort.key) {
+      data.sort(function(a,b) {
+        var va = a[_custSort.key]||"", vb = b[_custSort.key]||"";
+        if (typeof va === "number") return _custSort.asc ? va-vb : vb-va;
+        return _custSort.asc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+      });
+    }
+    var today = new Date();
+    var tbody = document.getElementById("cust-tbody");
+    tbody.innerHTML = data.map(function(c) {
+      var end = new Date(c.contract_end);
+      var diff = Math.ceil((end - today)/(1000*60*60*24));
+      var color = diff <= 30 ? "#f87171" : diff <= 90 ? "#fbbf24" : "#4ade80";
+      var fmt = function(v){return v ? Number(v).toLocaleString() : "-";};
+      return "<tr><td>"+(c.branch||"-")+"</td><td style=\"font-weight:700\">"+(c.room||"-")+"</td><td>"+(c.name||"-")+"</td><td>"+(c.resident_name||"-")+"</td><td>"+(c.phone||"-")+"</td><td>"+(c.contract_start||"")+" ~ "+(c.contract_end||"")+" <span style=\"color:"+color+";font-size:12px;\">("+diff+"일)</span></td><td style=\"text-align:right\">"+fmt(c.rent)+"</td><td style=\"text-align:right\">"+fmt(c.maintenance_fee)+"</td><td style=\"text-align:right\">"+fmt(c.deposit)+"</td><td><span style=\"padding:2px 8px;border-radius:8px;font-size:12px;background:"+(c.status==="계약 완료"?"rgba(74,222,128,0.15);color:#4ade80":"rgba(52,211,153,0.15);color:#34d399")+"\">"+(c.status||"-")+"</span></td></tr>";
+    }).join("");
+  }
 </script>
 </body>
 </html>
