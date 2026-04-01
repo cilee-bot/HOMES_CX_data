@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홈즈컴퍼니 고객 데이터 현황판</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #13161e;
+    --surface2: #1a1f2b;
+    --border: #252b38;
+    --accent1: #4fc3f7;
+    --accent2: #f48fb1;
+    --accent3: #a5d6a7;
+    --accent4: #ffcc80;
+    --accent5: #ce93d8;
+    --text: #e8eaf0;
+    --text-muted: #6b7585;
+    --text-dim: #8b95a8;
+    --male: #4fc3f7;
+    --female: #f48fb1;
+    --corp: #ffcc80;
+    --unknown: #4a5568;
+    --occupied: #4ade80;
+    --vacant: #f87171;
+    --waiting: #fbbf24;
+    --new: #60a5fa;
+    --renew: #34d399;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent1), var(--accent5));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .header-title {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .header-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .header-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .data-badge {
+    background: rgba(79, 195, 247, 0.1);
+    border: 1px solid rgba(79, 195, 247, 0.3);
+    color: var(--accent1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* TABS */
+  .tabs-container {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 14px 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    letter-spacing: 0.2px;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab.active {
+    color: var(--accent1);
+    border-bottom-color: var(--accent1);
+    font-weight: 700;
+  }
+
+  /* MAIN */
+  main {
+    padding: 28px 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* SUMMARY CARDS */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .summary-card.c1::before { background: var(--accent1); }
+  .summary-card.c2::before { background: var(--accent2); }
+  .summary-card.c3::before { background: var(--accent3); }
+  .summary-card.c4::before { background: var(--accent4); }
+  .summary-card.c5::before { background: var(--accent5); }
+  .summary-card.c6::before { background: linear-gradient(90deg, var(--accent1), var(--accent5)); }
+  .summary-card.c7::before { background: var(--occupied); }
+  .summary-card.c8::before { background: var(--vacant); }
+
+  .summary-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .summary-value {
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .summary-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+  @media (max-width: 1200px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    main { padding: 16px; }
+    .tabs-container { padding: 0 16px; }
+    header { padding: 16px; }
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .card-full { grid-column: 1 / -1; }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent1);
+  }
+
+  /* CHART CANVAS */
+  .chart-wrap {
+    position: relative;
+    height: 200px;
+  }
+
+  .chart-wrap.sm { height: 160px; }
+  .chart-wrap.md { height: 220px; }
+  .chart-wrap.lg { height: 260px; }
+
+  /* BAR STATS */
+  .stat-bars { display: flex; flex-direction: column; gap: 10px; }
+
+  .stat-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .stat-bar-label {
+    width: 70px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .stat-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .stat-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+
+  .stat-bar-count {
+    width: 50px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+  }
+
+  /* OCCUPANCY INDICATOR */
+  .occ-ring-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+  }
+
+  .occ-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+  }
+
+  .occ-ring canvas { width: 120px !important; height: 120px !important; }
+
+  .occ-ring-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .occ-ring-pct {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--occupied);
+    line-height: 1;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .occ-ring-text {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* BRANCH CARDS */
+  .branch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .branch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .branch-card:hover {
+    border-color: var(--accent1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(79, 195, 247, 0.1);
+  }
+
+  .branch-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .branch-total {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .mini-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .mini-stat {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .mini-stat-val {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .mini-stat-lbl {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .mini-bar-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 12px;
+    align-items: center;
+  }
+
+  .mini-bar-seg {
+    height: 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* SECTION TITLE */
+  .section-heading {
+    font-size: 21px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  /* TABLE */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .data-table th {
+    background: var(--surface2);
+    padding: 11px 14px;
+    text-align: left;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .data-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(37,43,56,0.6);
+    color: var(--text);
+  }
+
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .pct-badge {
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+  }
+
+  /* PILL */
+  .pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .pill-blue { background: rgba(79,195,247,0.15); color: var(--accent1); }
+  .pill-green { background: rgba(74,222,128,0.15); color: var(--occupied); }
+  .pill-red { background: rgba(248,113,113,0.15); color: var(--vacant); }
+  .pill-yellow { background: rgba(251,191,36,0.15); color: var(--waiting); }
+  .pill-purple { background: rgba(206,147,216,0.15); color: var(--accent5); }
+  .pill-gray { background: rgba(107,117,133,0.2); color: var(--text-muted); }
+
+  /* COMPARISON TABLE */
+  .compare-wrap { overflow-x: auto; }
+
+  /* ANIMATED NUMBER */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SIMULATOR INPUTS */
+  .sim-input-group { display:flex; flex-direction:column; gap:6px; }
+  .sim-label { font-size:12px; color:var(--text-muted); font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.5px; }
+  .sim-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Space Mono', monospace;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .sim-input:focus { outline:none; border-color:var(--accent5); }
+  .sim-input::-webkit-inner-spin-button { opacity:0.5; }
+
+  /* INSIGHT CARDS */
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .insight-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+  }
+  .insight-card.positive::before { background: linear-gradient(90deg,#4ade80,#34d399); }
+  .insight-card.warning::before { background: linear-gradient(90deg,#fbbf24,#f59e0b); }
+  .insight-card.action::before { background: linear-gradient(90deg,#4fc3f7,#818cf8); }
+  .insight-card.risk::before { background: linear-gradient(90deg,#f87171,#f43f5e); }
+
+  .insight-tag {
+    display:inline-block;
+    font-size:10px; font-weight:700;
+    padding:2px 10px; border-radius:10px;
+    margin-bottom:10px;
+    font-family:'Space Mono',monospace;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+  }
+  .tag-positive { background:rgba(74,222,128,0.15); color:#4ade80; }
+  .tag-warning  { background:rgba(251,191,36,0.15);  color:#fbbf24; }
+  .tag-action   { background:rgba(79,195,247,0.15);  color:#4fc3f7; }
+  .tag-risk     { background:rgba(248,113,113,0.15); color:#f87171; }
+
+  .insight-title { font-size:15px; font-weight:700; margin-bottom:8px; line-height:1.4; }
+  .insight-body  { font-size:13px; color:var(--text-dim); line-height:1.6; }
+  .insight-metric { font-size:22px; font-weight:900; margin:10px 0 4px; }
+
+  /* sim result cards */
+  .sim-result-card {
+    background: var(--surface2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    text-align:center;
+  }
+  .sim-result-val { font-size:20px; font-weight:900; font-family:'Space Mono',monospace; line-height:1; margin-bottom:4px; }
+  .sim-result-lbl { font-size:11px; color:var(--text-muted); }
+
+  .animate-in { animation: fadeInUp 0.4s ease forwards; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <div class="logo-icon">H</div>
+    <div>
+      <div class="header-title">홈즈컴퍼니 고객 데이터 현황판</div>
+      <div class="header-subtitle">Customer Analytics Dashboard · 마케팅 DB 기준</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="data-badge">총 457 호실 / 8개 지점</div>
+    <div class="data-badge" style="border-color:rgba(164,213,167,0.3); color:var(--accent3); background:rgba(164,213,167,0.08);">데이터 기준: 마케팅 통합 DB</div>
+  </div>
+</header>
+
+<div class="tabs-container">
+  <div class="tab active" onclick="showTab('overview')">📊 전체 현황</div>
+  <div class="tab" onclick="showTab('branches')">🏢 지점별 분석</div>
+  <div class="tab" onclick="showTab('gender')">👤 성별 분포</div>
+  <div class="tab" onclick="showTab('nationality')">🌏 국적 분포</div>
+  <div class="tab" onclick="showTab('job')">💼 직업 분포</div>
+  <div class="tab" onclick="showTab('age')">📅 연령 분포</div>
+  <div class="tab" onclick="showTab('contract')">📋 계약 현황</div>
+  <div class="tab" onclick="showTab('compare')">⚖️ 지점 비교</div>
+  <div class="tab" onclick="showTab('insight')" style="color:#f59e0b; font-weight:700;">💡 매출 인사이트</div>
+</div>
+
+<main>
+
+<!-- ===== OVERVIEW ===== -->
+<section id="overview" class="section active animate-in">
+  <div class="section-heading">전체 고객 현황 요약</div>
+  <div class="section-desc">8개 지점 전체 호실 기준 주요 지표</div>
+
+  <div class="summary-row">
+    <div class="summary-card c1">
+      <div class="summary-label">총 호실 수</div>
+      <div class="summary-value" style="color:var(--accent1)">457</div>
+      <div class="summary-sub">8개 지점 합산</div>
+    </div>
+    <div class="summary-card c7">
+      <div class="summary-label">재실 (입주)</div>
+      <div class="summary-value" style="color:var(--occupied)">278</div>
+      <div class="summary-sub">60.8% 점유율</div>
+    </div>
+    <div class="summary-card c8">
+      <div class="summary-label">공실</div>
+      <div class="summary-value" style="color:var(--vacant)">16</div>
+      <div class="summary-sub">유효 공실 3.5%</div>
+    </div>
+    <div class="summary-card c4">
+      <div class="summary-label">입주 대기</div>
+      <div class="summary-value" style="color:var(--waiting)">55</div>
+      <div class="summary-sub">확정 입주 대기자</div>
+    </div>
+    <div class="summary-card c2">
+      <div class="summary-label">신규 계약</div>
+      <div class="summary-value" style="color:var(--accent2)">166</div>
+      <div class="summary-sub">전체 대비 36.3%</div>
+    </div>
+    <div class="summary-card c3">
+      <div class="summary-label">재계약</div>
+      <div class="summary-value" style="color:var(--accent3)">59</div>
+      <div class="summary-sub">전체 대비 12.9%</div>
+    </div>
+    <div class="summary-card c5">
+      <div class="summary-label">여성 비율</div>
+      <div class="summary-value" style="color:var(--accent5)">57%</div>
+      <div class="summary-sub">정보있는 호실 기준</div>
+    </div>
+    <div class="summary-card c6">
+      <div class="summary-label">외국인 비율</div>
+      <div class="summary-value" style="color:var(--accent1)">61%</div>
+      <div class="summary-sub">국적 확인 호실 기준</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>전체 입주현황 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="overview-occupancy"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>계약 형태 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="overview-contract"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent5)"></span>성별 분포 (정보 있는 호실)</div>
+      <div class="chart-wrap">
+        <canvas id="overview-gender"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>국적 분포 (확인 호실)</div>
+      <div class="chart-wrap">
+        <canvas id="overview-nationality"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent4)"></span>직업 분포 (확인 호실)</div>
+      <div class="chart-wrap">
+        <canvas id="overview-job"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent4)"></span>지점별 호실 수 및 재실율</div>
+    <div class="chart-wrap lg">
+      <canvas id="overview-branches"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BRANCHES ===== -->
+<section id="branches" class="section">
+  <div class="section-heading">지점별 상세 현황</div>
+  <div class="section-desc">각 지점의 입주현황, 성별, 국적, 직업 분포 요약</div>
+
+  <div class="branch-grid" id="branch-cards-container"></div>
+</section>
+
+<!-- ===== GENDER ===== -->
+<section id="gender" class="section">
+  <div class="section-heading">성별 분포 현황</div>
+  <div class="section-desc">지점별 성별 구성 비율 및 수량 (정보 없는 호실 제외 가능)</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent5)"></span>전체 성별 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="gender-overall"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent5)"></span>지점별 성별 분포 (스택)</div>
+      <div class="chart-wrap md">
+        <canvas id="gender-by-branch"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent5)"></span>지점별 성별 상세 수치</div>
+    <div class="compare-wrap">
+      <table class="data-table" id="gender-table"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NATIONALITY ===== -->
+<section id="nationality" class="section">
+  <div class="section-heading">국적 분포 현황</div>
+  <div class="section-desc">내국인 / 외국인 / 법인 / 정보없음 기준</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>전체 국적 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="nat-overall"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>지점별 국적 분포 (스택)</div>
+      <div class="chart-wrap md">
+        <canvas id="nat-by-branch"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>지점별 국적 상세</div>
+    <div class="compare-wrap">
+      <table class="data-table" id="nat-table"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== JOB ===== -->
+<section id="job" class="section">
+  <div class="section-heading">직업 분포 현황</div>
+  <div class="section-desc">지점별 고객 직업군 구성</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent4)"></span>전체 직업 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="job-overall"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent4)"></span>지점별 직업 분포 (스택)</div>
+      <div class="chart-wrap md">
+        <canvas id="job-by-branch"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent4)"></span>지점별 직업 상세</div>
+    <div class="compare-wrap">
+      <table class="data-table" id="job-table"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== AGE ===== -->
+<section id="age" class="section">
+  <div class="section-heading">연령대 분포 현황</div>
+  <div class="section-desc">나이 정보가 확인된 호실 기준 (일부 지점 데이터 한정)</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent1)"></span>전체 연령대 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="age-overall"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent1)"></span>지점별 연령대 분포 (스택)</div>
+      <div class="chart-wrap md">
+        <canvas id="age-by-branch"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent1)"></span>지점별 연령대 상세</div>
+    <div class="compare-wrap">
+      <table class="data-table" id="age-table"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTRACT ===== -->
+<section id="contract" class="section">
+  <div class="section-heading">계약 현황</div>
+  <div class="section-desc">신규계약 / 재계약 / 계약기간 분포</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--new)"></span>전체 계약 형태</div>
+      <div class="chart-wrap md">
+        <canvas id="contract-overall"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--new)"></span>계약 기간 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="contract-duration"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--new)"></span>지점별 계약 현황 상세</div>
+    <div class="compare-wrap">
+      <table class="data-table" id="contract-table"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMPARE ===== -->
+<section id="compare" class="section">
+  <div class="section-heading">지점 비교 분석</div>
+  <div class="section-desc">주요 지표 기준 지점 간 비교표 및 기간별 변화 추이</div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>지점별 종합 지표 비교</div>
+    <div class="compare-wrap">
+      <table class="data-table" id="compare-table"></table>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>지점별 재실율 비교</div>
+      <div class="chart-wrap md">
+        <canvas id="compare-occ"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--renew)"></span>지점별 재계약율 비교</div>
+      <div class="chart-wrap md">
+        <canvas id="compare-renew"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <!-- MoM / YoY SECTION -->
+  <div style="border-top:1px solid var(--border); padding-top:28px; margin-top:4px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div class="section-heading" style="font-size:18px; margin-bottom:4px;">📈 기간별 변화 추이 (MoM · YoY)</div>
+        <div class="section-desc" style="margin-bottom:0; font-size:13px;">전월 대비(MoM) / 전년 동월 대비(YoY) 시뮬레이션 — 실제 시계열 데이터 연동 시 자동 반영</div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span style="font-size:12px; color:var(--text-muted);">지점 선택:</span>
+        <select id="mom-branch-select" onchange="renderMoMCharts()" style="background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:6px 12px; border-radius:8px; font-size:13px; font-family:'Noto Sans KR',sans-serif;">
+          <option value="all">전체 합산</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- MoM/YoY KPI delta cards -->
+    <div id="mom-kpi-row" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:24px;"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--accent1)"></span>재실율 월별 추이 (MoM)</div>
+        <div class="chart-wrap lg">
+          <canvas id="mom-occ-chart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--accent3)"></span>재계약율 월별 추이 (MoM)</div>
+        <div class="chart-wrap lg">
+          <canvas id="mom-renew-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:20px;">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--accent4)"></span>신규계약 수 월별 추이</div>
+        <div class="chart-wrap lg">
+          <canvas id="mom-newcontract-chart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--accent5)"></span>공실 수 월별 추이</div>
+        <div class="chart-wrap lg">
+          <canvas id="mom-vacant-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-title"><span class="dot"></span>MoM · YoY 수치 상세표</div>
+      <div class="compare-wrap">
+        <table class="data-table" id="mom-detail-table"></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== INSIGHT ===== -->
+<section id="insight" class="section">
+  <div class="section-heading">💡 매출 인사이트 — 고객 데이터 × 매출 영향 분석</div>
+  <div class="section-desc">매출 = 입주자 수 × 평균 임대료 × 계약기간 | 고객 세그먼트별 매출 기여도 및 레버 분석</div>
+
+  <!-- 공식 설명 배너 -->
+  <div style="background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(79,195,247,0.08)); border:1px solid rgba(245,158,11,0.35); border-radius:14px; padding:20px 24px; margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+    <div style="font-size:22px; font-weight:900; color:#f59e0b; font-family:'Space Mono',monospace; white-space:nowrap;">매출 = 입주자 × 임대료 × 기간</div>
+    <div style="flex:1; min-width:260px;">
+      <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">
+        세 변수 중 <strong style="color:#4fc3f7">입주자 수</strong>는 <em>공실율·재실율</em>에 의해, 
+        <strong style="color:#f48fb1">임대료</strong>는 <em>고객 유형·지점 프리미엄</em>에 의해, 
+        <strong style="color:#a5d6a7">기간</strong>은 <em>계약 길이·재계약율</em>에 의해 결정됩니다.
+        아래 각 섹션에서 고객 데이터가 각 레버에 미치는 영향을 확인하세요.
+      </div>
+    </div>
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-size:20px; font-weight:900; color:#4fc3f7; font-family:'Space Mono',monospace;">₩312M</div>
+        <div style="font-size:11px; color:var(--text-muted);">추정 월 매출 합산</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:20px; font-weight:900; color:#f87171; font-family:'Space Mono',monospace;">₩27M</div>
+        <div style="font-size:11px; color:var(--text-muted);">공실 기회비용/월</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === 레버 1: 입주자 수 (공실/재실) === -->
+  <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid rgba(79,195,247,0.3);">
+    <span style="font-size:16px; font-weight:800; color:#4fc3f7;">LEVER 1</span>
+    <span style="font-size:15px; font-weight:700; margin-left:10px;">입주자 수 — 공실 기회비용 & 대기수요 전환</span>
+  </div>
+  <div class="grid-3" style="margin-bottom:24px;">
+    <div class="card" style="border-top:2px solid #4fc3f7;">
+      <div class="card-title"><span class="dot" style="background:#4fc3f7"></span>지점별 재실율 & 기회비용</div>
+      <div class="chart-wrap lg"><canvas id="ins-vacancy-bar"></canvas></div>
+    </div>
+    <div class="card" style="border-top:2px solid #f87171;">
+      <div class="card-title"><span class="dot" style="background:#f87171"></span>공실 → 매출 전환 시뮬레이터</div>
+      <div id="ins-vacancy-sim" style="padding-top:8px;"></div>
+    </div>
+    <div class="card" style="border-top:2px solid #fbbf24;">
+      <div class="card-title"><span class="dot" style="background:#fbbf24"></span>입주대기 수요 vs 공실</div>
+      <div class="chart-wrap lg"><canvas id="ins-waitvsvac"></canvas></div>
+    </div>
+  </div>
+
+  <!-- === 레버 2: 임대료 (고객 유형별 단가) === -->
+  <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid rgba(244,143,177,0.3);">
+    <span style="font-size:16px; font-weight:800; color:#f48fb1;">LEVER 2</span>
+    <span style="font-size:15px; font-weight:700; margin-left:10px;">임대료 단가 — 고객 세그먼트별 평균 단가 비교</span>
+  </div>
+  <div class="grid-2" style="margin-bottom:8px;">
+    <div class="card" style="border-top:2px solid #f48fb1;">
+      <div class="card-title"><span class="dot" style="background:#f48fb1"></span>직업별 평균 임대료</div>
+      <div class="chart-wrap md"><canvas id="ins-rent-job"></canvas></div>
+    </div>
+    <div class="card" style="border-top:2px solid #f48fb1;">
+      <div class="card-title"><span class="dot" style="background:#ce93d8"></span>국적별 평균 임대료</div>
+      <div class="chart-wrap md"><canvas id="ins-rent-nat"></canvas></div>
+    </div>
+  </div>
+  <div class="grid-2" style="margin-bottom:24px;">
+    <div class="card" style="border-top:2px solid #f48fb1;">
+      <div class="card-title"><span class="dot" style="background:#80deea"></span>성별별 평균 임대료</div>
+      <div class="chart-wrap md"><canvas id="ins-rent-gender"></canvas></div>
+    </div>
+    <div class="card" style="border-top:2px solid #f48fb1;">
+      <div class="card-title"><span class="dot" style="background:#ffcc80"></span>연령대별 평균 임대료</div>
+      <div class="chart-wrap md"><canvas id="ins-rent-age"></canvas></div>
+    </div>
+  </div>
+
+  <!-- === 레버 3: 계약기간 === -->
+  <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid rgba(165,214,167,0.3);">
+    <span style="font-size:16px; font-weight:800; color:#a5d6a7;">LEVER 3</span>
+    <span style="font-size:15px; font-weight:700; margin-left:10px;">계약기간 — 고객 유형별 장기계약 성향 분석</span>
+  </div>
+  <div class="grid-2" style="margin-bottom:8px;">
+    <div class="card" style="border-top:2px solid #a5d6a7;">
+      <div class="card-title"><span class="dot" style="background:#a5d6a7"></span>직업별 평균 계약기간(월)</div>
+      <div class="chart-wrap md"><canvas id="ins-dur-job"></canvas></div>
+    </div>
+    <div class="card" style="border-top:2px solid #a5d6a7;">
+      <div class="card-title"><span class="dot" style="background:#a5d6a7"></span>국적별 평균 계약기간(월)</div>
+      <div class="chart-wrap md"><canvas id="ins-dur-nat"></canvas></div>
+    </div>
+  </div>
+  <div class="grid-2" style="margin-bottom:24px;">
+    <div class="card" style="border-top:2px solid #a5d6a7;">
+      <div class="card-title"><span class="dot" style="background:#4fc3f7"></span>재계약 여부별 LTV 비교</div>
+      <div class="chart-wrap md"><canvas id="ins-ltv-renew"></canvas></div>
+    </div>
+    <div class="card" style="border-top:2px solid #a5d6a7;">
+      <div class="card-title"><span class="dot" style="background:#f48fb1"></span>성별별 평균 계약기간(월)</div>
+      <div class="chart-wrap md"><canvas id="ins-dur-gender"></canvas></div>
+    </div>
+  </div>
+
+  <!-- === 종합: 세그먼트별 매출 기여도 === -->
+  <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid rgba(245,158,11,0.3);">
+    <span style="font-size:16px; font-weight:800; color:#f59e0b;">TOTAL</span>
+    <span style="font-size:15px; font-weight:700; margin-left:10px;">세그먼트별 추정 총매출 기여도 (임대료 × 기간)</span>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card" style="border-top:2px solid #f59e0b;">
+      <div class="card-title"><span class="dot" style="background:#f59e0b"></span>세그먼트별 건당 추정 매출 비교</div>
+      <div class="chart-wrap lg"><canvas id="ins-total-revenue"></canvas></div>
+    </div>
+    <div class="card" style="border-top:2px solid #f59e0b;">
+      <div class="card-title"><span class="dot" style="background:#f59e0b"></span>지점별 현재 월매출 추정</div>
+      <div class="chart-wrap lg"><canvas id="ins-branch-monthly"></canvas></div>
+    </div>
+  </div>
+
+  <!-- === 데이터 입력 시뮬레이터 === -->
+  <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid rgba(206,147,216,0.3);">
+    <span style="font-size:16px; font-weight:800; color:#ce93d8;">SIM</span>
+    <span style="font-size:15px; font-weight:700; margin-left:10px;">매출 시뮬레이터 — 고객 파라미터 직접 입력</span>
+  </div>
+  <div class="card" style="border-top:2px solid #ce93d8; margin-bottom:20px;">
+    <div style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">
+      아래 파라미터를 조정해 매출 변화를 실시간으로 확인하세요. 실제 데이터 입력 시 위 차트들과 연동됩니다.
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px;">
+      <div class="sim-input-group">
+        <label class="sim-label">총 호실 수</label>
+        <input type="number" class="sim-input" id="sim-total" value="457" oninput="calcSim()">
+      </div>
+      <div class="sim-input-group">
+        <label class="sim-label">재실율 (%)</label>
+        <input type="number" class="sim-input" id="sim-occ" value="61" min="0" max="100" oninput="calcSim()">
+      </div>
+      <div class="sim-input-group">
+        <label class="sim-label">평균 임대료 (원)</label>
+        <input type="number" class="sim-input" id="sim-rent" value="1200000" oninput="calcSim()">
+      </div>
+      <div class="sim-input-group">
+        <label class="sim-label">평균 계약기간 (월)</label>
+        <input type="number" class="sim-input" id="sim-dur" value="9.5" step="0.5" oninput="calcSim()">
+      </div>
+      <div class="sim-input-group">
+        <label class="sim-label">재계약율 (%)</label>
+        <input type="number" class="sim-input" id="sim-renew" value="26" min="0" max="100" oninput="calcSim()">
+      </div>
+      <div class="sim-input-group">
+        <label class="sim-label">재계약 시 기간 연장 (월)</label>
+        <input type="number" class="sim-input" id="sim-renew-ext" value="6" oninput="calcSim()">
+      </div>
+    </div>
+    <div id="sim-result" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;"></div>
+    <div style="margin-top:20px;">
+      <div class="card-title"><span class="dot" style="background:#ce93d8"></span>시나리오별 연간 매출 비교</div>
+      <div class="chart-wrap lg"><canvas id="sim-scenario-chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- === 인사이트 요약 카드 === -->
+  <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid rgba(74,222,128,0.3);">
+    <span style="font-size:16px; font-weight:800; color:#4ade80;">KEY</span>
+    <span style="font-size:15px; font-weight:700; margin-left:10px;">핵심 인사이트 & 액션 가이드</span>
+  </div>
+  <div id="insight-cards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:20px;"></div>
+
+</section>
+
+</main>
+
+<script>
+// ==================== DATA ====================
+const RAW = {
+  "선정릉": {
+    "total": 66,
+    "입주현황": { "재실": 52, "공실": 6, "정보없음": 5, "입주대기": 3 },
+    "계약상태": { "신규계약": 28, "재계약": 26, "정보없음": 12 },
+    "성별": { "정보없음": 18, "여": 16, "남": 15, "사업자": 11, "공실(해당없음)": 6 },
+    "국적": { "정보없음": 66 },
+    "직업": { "직장인": 51, "학생/학교": 9, "정보없음": 6 },
+    "계약기간": { "12개월 이하": 31, "6개월 이하": 12, "정보없음": 10, "12개월 초과": 6, "1개월 이하": 5, "3개월 이하": 2 },
+    "연령대": { "30대": 14, "50대": 4, "20대": 4, "60대 이상": 2, "40대": 7 }
+  },
+  "남영": {
+    "total": 64,
+    "입주현황": { "재실": 56, "공실": 4, "입주대기": 4 },
+    "계약상태": { "신규계약": 37, "재계약": 19, "정보없음": 8 },
+    "성별": { "남": 22, "여": 18, "정보없음": 14, "사업자": 7, "공실(해당없음)": 3 },
+    "국적": { "정보없음": 64 },
+    "직업": { "직장인": 49, "학생/학교": 12, "정보없음": 3 },
+    "계약기간": { "12개월 이하": 46, "정보없음": 9, "6개월 이하": 4, "12개월 초과": 3, "3개월 이하": 2 },
+    "연령대": { "30대": 11, "20대": 14, "40대": 6, "50대": 7, "60대 이상": 1 }
+  },
+  "망원": {
+    "total": 18,
+    "입주현황": { "재실": 12, "공실": 6 },
+    "계약상태": { "신규계약": 6, "재계약": 6, "정보없음": 6 },
+    "성별": { "여": 7, "남": 3, "사업자": 3, "공실(해당없음)": 3, "정보없음": 2 },
+    "국적": { "정보없음": 18 },
+    "직업": { "직장인": 12, "학생/학교": 3, "정보없음": 3 },
+    "계약기간": { "12개월 이하": 6, "정보없음": 6, "6개월 이하": 4, "3개월 이하": 1, "1개월 이하": 1 },
+    "연령대": { "30대": 4, "20대": 4, "50대": 2 }
+  },
+  "안암": {
+    "total": 60,
+    "입주현황": { "재실": 41, "입주대기": 19 },
+    "계약상태": { "신규계약": 47, "정보없음": 8, "재계약": 5 },
+    "성별": { "여": 39, "남": 12, "정보없음": 9 },
+    "국적": { "외국인": 35, "내국인": 15, "법인": 9, "정보없음": 1 },
+    "직업": { "학생/학교": 45, "정보없음": 10, "직장인": 5 },
+    "계약기간": { "6개월 이하": 25, "12개월 이하": 19, "정보없음": 8, "3개월 이하": 5, "1개월 이하": 3 },
+    "연령대": {}
+  },
+  "아코모가산바이홈즈-101동": {
+    "total": 39,
+    "입주현황": { "재실": 20, "정보없음": 11, "입주대기": 4, "퇴실": 3, "계약취소": 1 },
+    "계약상태": { "정보없음": 39 },
+    "성별": { "정보없음": 17, "남": 14, "여": 8 },
+    "국적": { "내국인": 24, "정보없음": 12, "외국인": 3 },
+    "직업": { "직장인": 21, "정보없음": 14, "학생/학교": 4 },
+    "계약기간": { "12개월 이하": 19, "정보없음": 12, "12개월 초과": 5, "3개월 이하": 1, "1개월 이하": 1, "6개월 이하": 1 },
+    "연령대": {}
+  },
+  "아코모가산바이홈즈-201동": {
+    "total": 41,
+    "입주현황": { "재실": 33, "정보없음": 4, "입주대기": 2, "계약취소": 2 },
+    "계약상태": { "정보없음": 41 },
+    "성별": { "여": 32, "남": 5, "정보없음": 4 },
+    "국적": { "내국인": 21, "외국인": 17, "정보없음": 3 },
+    "직업": { "직장인": 29, "정보없음": 7, "학생/학교": 5 },
+    "계약기간": { "12개월 이하": 26, "12개월 초과": 11, "정보없음": 4 },
+    "연령대": {}
+  },
+  "아코모회기바이홈즈": {
+    "total": 152,
+    "입주현황": { "재실": 60, "정보없음": 56, "입주대기": 26, "퇴실": 9, "계약취소": 1 },
+    "계약상태": { "정보없음": 147, "재계약": 3, "중도퇴실": 2 },
+    "성별": { "정보없음": 71, "여": 57, "남": 24 },
+    "국적": { "외국인": 64, "정보없음": 57, "내국인": 31 },
+    "직업": { "정보없음": 68, "학생/학교": 54, "기타": 11, "직장인": 9, "교육/훈련": 8, "이사/인테리어": 2 },
+    "계약기간": { "정보없음": 59, "12개월 이하": 58, "6개월 이하": 18, "3개월 이하": 15, "1개월 이하": 2 },
+    "연령대": {}
+  },
+  "원효로 240": {
+    "total": 17,
+    "입주현황": { "정보없음": 17 },
+    "계약상태": { "정보없음": 17 },
+    "성별": { "정보없음": 17 },
+    "국적": { "정보없음": 17 },
+    "직업": { "정보없음": 17 },
+    "계약기간": { "정보없음": 17 },
+    "연령대": {}
+  }
+};
+
+const BRANCHES = Object.keys(RAW);
+const BRANCH_COLORS = [
+  '#4fc3f7','#f48fb1','#a5d6a7','#ffcc80','#ce93d8','#80deea','#ef9a9a','#ffe082'
+];
+
+// ==================== HELPERS ====================
+function pct(val, total) {
+  if (!total) return '0%';
+  return (val / total * 100).toFixed(1) + '%';
+}
+
+function sum(obj, excludeKeys=[]) {
+  return Object.entries(obj).reduce((s,[k,v]) => excludeKeys.includes(k) ? s : s+v, 0);
+}
+
+function getOrZero(obj, key) { return obj[key] || 0; }
+
+function sumAll(data) {
+  const result = {};
+  BRANCHES.forEach(b => {
+    Object.entries(data[b]).forEach(([k,v]) => {
+      result[k] = (result[k]||0) + v;
+    });
+  });
+  return result;
+}
+
+const chartDefaults = {
+  plugins: {
+    legend: {
+      labels: {
+        color: '#8b95a8',
+        font: { family: "'Noto Sans KR', sans-serif", size: 13 },
+        boxWidth: 12, boxHeight: 12, padding: 14
+      }
+    },
+    tooltip: {
+      backgroundColor: '#1a1f2b',
+      borderColor: '#252b38',
+      borderWidth: 1,
+      titleColor: '#e8eaf0',
+      bodyColor: '#8b95a8',
+      titleFont: { family: "'Noto Sans KR'", size: 13 },
+      bodyFont: { family: "'Noto Sans KR'", size: 12 },
+      callbacks: {
+        label: function(ctx) {
+          const val = ctx.raw || 0;
+          const total = ctx.dataset.data.reduce((a,b)=>a+b, 0);
+          return ` ${ctx.label || ctx.dataset.label}: ${val}개 (${(val/total*100).toFixed(1)}%)`;
+        }
+      }
+    }
+  }
+};
+
+function makeDonut(id, labels, data, colors) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  const total = data.reduce((a,b)=>a+b,0);
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#0a0c10' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '52%',
+      layout: { padding: 20 },
+      plugins: {
+        legend: chartDefaults.plugins.legend,
+        tooltip: chartDefaults.plugins.tooltip,
+        datalabels: {
+          display: function(ctx) {
+            const val = ctx.dataset.data[ctx.dataIndex];
+            return (val / total * 100) >= 4; // hide if slice < 4%
+          },
+          color: function(ctx) {
+            // Use the slice color but brightened, or white for dark backgrounds
+            return '#ffffff';
+          },
+          font: { family: "'Space Mono', monospace", size: 11, weight: 'bold' },
+          formatter: function(value, ctx) {
+            const pct = (value / total * 100).toFixed(1);
+            return `${value}\n${pct}%`;
+          },
+          textAlign: 'center',
+          anchor: 'center',
+          align: 'center',
+          textShadowColor: 'rgba(0,0,0,0.6)',
+          textShadowBlur: 4,
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+function makeBar(id, labels, datasets, stacked=false, horizontal=false) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: horizontal ? 'bar' : 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: horizontal ? 'y' : 'x',
+      scales: {
+        x: { stacked, ticks: { color: '#6b7585', font: { size: 12, family: "'Noto Sans KR'" } }, grid: { color: '#1a1f2b' } },
+        y: { stacked, ticks: { color: '#6b7585', font: { size: 12, family: "'Noto Sans KR'" } }, grid: { color: '#1a1f2b' } }
+      },
+      plugins: {
+        ...chartDefaults.plugins,
+        tooltip: {
+          ...chartDefaults.plugins.tooltip,
+          callbacks: {
+            label: function(ctx) {
+              return ` ${ctx.dataset.label}: ${ctx.raw}개`;
+            }
+          }
+        },
+        datalabels: { display: false }
+      }
+    }
+  });
+}
+
+// ==================== OVERVIEW ====================
+function initOverview() {
+  // Occupancy overall
+  const allOcc = sumAll(BRANCHES.reduce((o,b) => { o[b] = RAW[b].입주현황; return o; }, {}));
+  makeDonut('overview-occupancy',
+    Object.keys(allOcc), Object.values(allOcc),
+    ['#4ade80','#f87171','#fbbf24','#94a3b8','#60a5fa','#f48fb1']
+  );
+
+  // Contract overall
+  const allCont = sumAll(BRANCHES.reduce((o,b) => { o[b] = RAW[b].계약상태; return o; }, {}));
+  makeDonut('overview-contract',
+    Object.keys(allCont), Object.values(allCont),
+    ['#60a5fa','#34d399','#f87171','#94a3b8','#fbbf24']
+  );
+
+  // Gender overall (exclude 공실, 정보없음)
+  const genderTotal = { '남': 0, '여': 0, '사업자': 0, '정보없음': 0, '공실(해당없음)': 0 };
+  BRANCHES.forEach(b => {
+    Object.entries(RAW[b].성별).forEach(([k,v]) => {
+      if (genderTotal[k] !== undefined) genderTotal[k] += v;
+      else genderTotal['정보없음'] = (genderTotal['정보없음']||0) + v;
+    });
+  });
+  const genderFiltered = Object.fromEntries(Object.entries(genderTotal).filter(([k])=>k!=='공실(해당없음)'));
+  makeDonut('overview-gender', Object.keys(genderFiltered), Object.values(genderFiltered),
+    ['#4fc3f7','#f48fb1','#ffcc80','#4a5568']);
+
+  // Nationality overall
+  const natTotal = {};
+  BRANCHES.forEach(b => {
+    Object.entries(RAW[b].국적).forEach(([k,v]) => natTotal[k] = (natTotal[k]||0)+v);
+  });
+  makeDonut('overview-nationality', Object.keys(natTotal), Object.values(natTotal),
+    ['#a5d6a7','#4fc3f7','#ffcc80','#4a5568']);
+
+  // Job overall
+  const jobTotal = {};
+  BRANCHES.forEach(b => {
+    Object.entries(RAW[b].직업).forEach(([k,v]) => jobTotal[k] = (jobTotal[k]||0)+v);
+  });
+  makeDonut('overview-job', Object.keys(jobTotal), Object.values(jobTotal),
+    ['#ffcc80','#ce93d8','#80deea','#ef9a9a','#4fc3f7','#a5d6a7','#4a5568']);
+
+  // Branches bar chart
+  const branchLabels = BRANCHES.map(b => b.replace('아코모가산바이홈즈-','가산'));
+  const branchTotals = BRANCHES.map(b => RAW[b].total);
+  const branchOcc = BRANCHES.map(b => RAW[b].입주현황['재실']||0);
+  const branchVacant = BRANCHES.map(b => RAW[b].입주현황['공실']||0);
+
+  makeBar('overview-branches', branchLabels, [
+    { label: '재실', data: branchOcc, backgroundColor: '#4ade80' },
+    { label: '공실', data: branchVacant, backgroundColor: '#f87171' },
+    { label: '입주대기', data: BRANCHES.map(b => RAW[b].입주현황['입주대기']||0), backgroundColor: '#fbbf24' },
+    { label: '정보없음', data: BRANCHES.map(b => RAW[b].입주현황['정보없음']||0), backgroundColor: '#4a5568' }
+  ], true);
+}
+
+// ==================== BRANCHES ====================
+function initBranches() {
+  const container = document.getElementById('branch-cards-container');
+  container.innerHTML = '';
+
+  BRANCHES.forEach((b, idx) => {
+    const d = RAW[b];
+    const occ = d.입주현황['재실']||0;
+    const vac = d.입주현황['공실']||0;
+    const wait = d.입주현황['입주대기']||0;
+    const newC = d.계약상태['신규계약']||0;
+    const renew = d.계약상태['재계약']||0;
+    const male = d.성별['남']||0;
+    const female = d.성별['여']||0;
+    const corp = d.성별['사업자']||0;
+
+    const totalKnown = d.total;
+    const occRate = (occ / totalKnown * 100).toFixed(0);
+
+    // Gender bar segments
+    const gTotal = male + female + corp;
+    const mPct = gTotal ? (male/gTotal*100) : 0;
+    const fPct = gTotal ? (female/gTotal*100) : 0;
+    const cPct = gTotal ? (corp/gTotal*100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'branch-card';
+    card.style.borderTop = `3px solid ${BRANCH_COLORS[idx]}`;
+    card.innerHTML = `
+      <div class="branch-name">${b}</div>
+      <div class="branch-total">총 ${d.total}호실</div>
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="mini-stat-val" style="color:var(--occupied)">${occ}</div>
+          <div class="mini-stat-lbl">재실</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-val" style="color:var(--vacant)">${vac}</div>
+          <div class="mini-stat-lbl">공실</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-val" style="color:var(--new)">${newC}</div>
+          <div class="mini-stat-lbl">신규계약</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-val" style="color:var(--renew)">${renew}</div>
+          <div class="mini-stat-lbl">재계약</div>
+        </div>
+      </div>
+      <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px;">재실율 ${occRate}%</div>
+      <div style="background:var(--border); height:4px; border-radius:2px; overflow:hidden; margin-bottom:14px;">
+        <div style="width:${occRate}%; height:100%; background:${BRANCH_COLORS[idx]}; border-radius:2px;"></div>
+      </div>
+      ${gTotal > 0 ? `
+      <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px;">성별 구성 (${male}남 / ${female}여 / ${corp}사업자)</div>
+      <div style="display:flex; height:6px; border-radius:3px; overflow:hidden; gap:1px;">
+        <div style="width:${mPct}%; background:var(--male);"></div>
+        <div style="width:${fPct}%; background:var(--female);"></div>
+        <div style="width:${cPct}%; background:var(--corp);"></div>
+      </div>
+      <div class="legend-row" style="margin-top:6px;">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--male)"></div>남 ${male}</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--female)"></div>여 ${female}</div>
+        ${corp>0?`<div class="legend-item"><div class="legend-dot" style="background:var(--corp)"></div>사업자 ${corp}</div>`:''}
+      </div>
+      ` : '<div style="font-size:10px;color:var(--text-muted)">성별 정보 없음</div>'}
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ==================== GENDER ===== ====================
+function makeStackedBranch(id, keyList, colorMap, getDataFn) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  const shortLabels = BRANCHES.map(b => b.replace('아코모가산바이홈즈-','가산-').replace('아코모회기바이홈즈','회기'));
+  const datasets = keyList.map(k => ({
+    label: k,
+    data: BRANCHES.map(b => getDataFn(b, k)),
+    backgroundColor: colorMap[k] || '#666'
+  }));
+  new Chart(ctx, {
+    type: 'bar',
+    data: { labels: shortLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true, ticks: { color: '#6b7585', font: { size: 11, family: "'Noto Sans KR'" } }, grid: { color: '#1a1f2b' } },
+        y: { stacked: true, ticks: { color: '#6b7585', font: { size: 12, family: "'Noto Sans KR'" } }, grid: { color: '#1a1f2b' } }
+      },
+      plugins: { ...chartDefaults.plugins, tooltip: { ...chartDefaults.plugins.tooltip, callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}` } }, datalabels: { display: false } }
+    }
+  });
+}
+
+function makeTable(id, headers, rows) {
+  const t = document.getElementById(id);
+  if (!t) return;
+  t.innerHTML = `<thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+
+function initGender() {
+  const keys = ['남','여','사업자','정보없음'];
+  const colors = { '남': '#4fc3f7', '여': '#f48fb1', '사업자': '#ffcc80', '정보없음': '#4a5568' };
+
+  // Overall donut (exclude 공실)
+  const total = { '남': 0, '여': 0, '사업자': 0, '정보없음': 0 };
+  BRANCHES.forEach(b => {
+    ['남','여','사업자','정보없음'].forEach(k => total[k] += (RAW[b].성별[k]||0));
+  });
+  makeDonut('gender-overall', Object.keys(total), Object.values(total), Object.values(colors));
+  makeStackedBranch('gender-by-branch', keys, colors, (b,k) => RAW[b].성별[k]||0);
+
+  // Table
+  const rows = BRANCHES.map(b => {
+    const d = RAW[b].성별;
+    const t = RAW[b].total;
+    return [
+      b,
+      `${d['남']||0} (${pct(d['남']||0, t)})`,
+      `${d['여']||0} (${pct(d['여']||0, t)})`,
+      `${d['사업자']||0} (${pct(d['사업자']||0, t)})`,
+      `${d['정보없음']||0} (${pct(d['정보없음']||0, t)})`,
+      t
+    ];
+  });
+  makeTable('gender-table', ['지점','남','여','사업자','정보없음','합계'], rows);
+}
+
+function initNationality() {
+  const keys = ['내국인','외국인','법인','정보없음'];
+  const colors = { '내국인': '#a5d6a7', '외국인': '#4fc3f7', '법인': '#ffcc80', '정보없음': '#4a5568' };
+
+  const total = { '내국인': 0, '외국인': 0, '법인': 0, '정보없음': 0 };
+  BRANCHES.forEach(b => {
+    keys.forEach(k => total[k] += (RAW[b].국적[k]||0));
+  });
+  makeDonut('nat-overall', Object.keys(total), Object.values(total), Object.values(colors));
+  makeStackedBranch('nat-by-branch', keys, colors, (b,k) => RAW[b].국적[k]||0);
+
+  const rows = BRANCHES.map(b => {
+    const d = RAW[b].국적;
+    const t = RAW[b].total;
+    return [b,
+      `${d['내국인']||0} (${pct(d['내국인']||0, t)})`,
+      `${d['외국인']||0} (${pct(d['외국인']||0, t)})`,
+      `${d['법인']||0} (${pct(d['법인']||0, t)})`,
+      `${d['정보없음']||0} (${pct(d['정보없음']||0, t)})`,
+      t
+    ];
+  });
+  makeTable('nat-table', ['지점','내국인','외국인','법인','정보없음','합계'], rows);
+}
+
+function initJob() {
+  const keys = ['직장인','학생/학교','교육/훈련','기타','이사/인테리어','정보없음'];
+  const colors = { '직장인': '#ffcc80', '학생/학교': '#ce93d8', '교육/훈련': '#80deea', '기타': '#ef9a9a', '이사/인테리어': '#4fc3f7', '정보없음': '#4a5568' };
+
+  const total = {};
+  keys.forEach(k => total[k] = 0);
+  BRANCHES.forEach(b => keys.forEach(k => total[k] += (RAW[b].직업[k]||0)));
+  makeDonut('job-overall', Object.keys(total), Object.values(total), Object.values(colors));
+  makeStackedBranch('job-by-branch', keys, colors, (b,k) => RAW[b].직업[k]||0);
+
+  const rows = BRANCHES.map(b => {
+    const d = RAW[b].직업;
+    const t = RAW[b].total;
+    return [b,
+      `${d['직장인']||0} (${pct(d['직장인']||0, t)})`,
+      `${d['학생/학교']||0} (${pct(d['학생/학교']||0, t)})`,
+      `${d['교육/훈련']||0} (${pct(d['교육/훈련']||0, t)})`,
+      `${d['기타']||0}`,
+      `${d['정보없음']||0} (${pct(d['정보없음']||0, t)})`,
+      t
+    ];
+  });
+  makeTable('job-table', ['지점','직장인','학생/학교','교육/훈련','기타','정보없음','합계'], rows);
+}
+
+function initAge() {
+  const keys = ['20대 미만','20대','30대','40대','50대','60대 이상'];
+  const colors = { '20대 미만': '#80deea', '20대': '#ce93d8', '30대': '#4fc3f7', '40대': '#a5d6a7', '50대': '#ffcc80', '60대 이상': '#ef9a9a' };
+
+  const total = {};
+  keys.forEach(k => total[k] = 0);
+  BRANCHES.forEach(b => {
+    if (RAW[b].연령대) keys.forEach(k => total[k] += (RAW[b].연령대[k]||0));
+  });
+
+  const filteredKeys = keys.filter(k => total[k] > 0);
+  makeDonut('age-overall', filteredKeys, filteredKeys.map(k=>total[k]), filteredKeys.map(k=>colors[k]));
+
+  const branchesWithAge = BRANCHES.filter(b => RAW[b].연령대 && Object.keys(RAW[b].연령대).length > 0);
+  const shortLabels = branchesWithAge.map(b => b.replace('아코모가산바이홈즈-','가산-'));
+  const ctx = document.getElementById('age-by-branch');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: shortLabels,
+        datasets: filteredKeys.map(k => ({
+          label: k,
+          data: branchesWithAge.map(b => (RAW[b].연령대[k]||0)),
+          backgroundColor: colors[k]
+        }))
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true, ticks: { color: '#6b7585', font: { size: 12 } }, grid: { color: '#1a1f2b' } },
+          y: { stacked: true, ticks: { color: '#6b7585', font: { size: 12 } }, grid: { color: '#1a1f2b' } }
+        },
+        plugins: { ...chartDefaults.plugins, datalabels: { display: false } }
+      }
+    });
+  }
+
+  const rows = BRANCHES.map(b => {
+    const d = RAW[b].연령대 || {};
+    const t = sum(d);
+    if (t === 0) return [b, '-', '-', '-', '-', '-', '-', '데이터없음'];
+    return [b,
+      `${d['20대 미만']||0}`, `${d['20대']||0}`, `${d['30대']||0}`,
+      `${d['40대']||0}`, `${d['50대']||0}`, `${d['60대 이상']||0}`, t
+    ];
+  });
+  makeTable('age-table', ['지점','20대 미만','20대','30대','40대','50대','60대+','합계(확인분)'], rows);
+}
+
+function initContract() {
+  const allCont = {};
+  BRANCHES.forEach(b => {
+    Object.entries(RAW[b].계약상태).forEach(([k,v]) => allCont[k] = (allCont[k]||0)+v);
+  });
+  makeDonut('contract-overall', Object.keys(allCont), Object.values(allCont),
+    ['#60a5fa','#34d399','#f87171','#94a3b8','#fbbf24']);
+
+  // Duration overall
+  const durKeys = ['1개월 이하','3개월 이하','6개월 이하','12개월 이하','12개월 초과','정보없음'];
+  const durColors = ['#80deea','#4fc3f7','#a5d6a7','#ffcc80','#ce93d8','#4a5568'];
+  const durTotals = {};
+  durKeys.forEach(k => durTotals[k] = 0);
+  BRANCHES.forEach(b => durKeys.forEach(k => durTotals[k] += (RAW[b].계약기간[k]||0)));
+  makeDonut('contract-duration', durKeys, durKeys.map(k=>durTotals[k]), durColors);
+
+  const rows = BRANCHES.map(b => {
+    const d = RAW[b].계약상태;
+    const t = RAW[b].total;
+    return [b,
+      `${d['신규계약']||0} (${pct(d['신규계약']||0, t)})`,
+      `${d['재계약']||0} (${pct(d['재계약']||0, t)})`,
+      `${d['중도퇴실']||0}`,
+      `${d['정보없음']||0}`,
+      t
+    ];
+  });
+  makeTable('contract-table', ['지점','신규계약','재계약','중도퇴실','정보없음','합계'], rows);
+}
+
+function initCompare() {
+  // Table
+  const rows = BRANCHES.map((b, idx) => {
+    const d = RAW[b];
+    const occ = d.입주현황['재실']||0;
+    const vac = d.입주현황['공실']||0;
+    const wait = d.입주현황['입주대기']||0;
+    const newC = d.계약상태['신규계약']||0;
+    const renew = d.계약상태['재계약']||0;
+    const male = d.성별['남']||0;
+    const female = d.성별['여']||0;
+    const foreign = d.국적['외국인']||0;
+    const domestic = d.국적['내국인']||0;
+    const worker = d.직업['직장인']||0;
+    const student = d.직업['학생/학교']||0;
+    const occRate = (occ/d.total*100).toFixed(0);
+    const renewRate = (newC+renew) > 0 ? (renew/(newC+renew)*100).toFixed(0) : '-';
+    return [
+      `<span style="color:${BRANCH_COLORS[idx]};font-weight:700">${b}</span>`,
+      d.total,
+      `<span class="pill pill-green">${occ}</span>`,
+      `<span class="pill pill-red">${vac}</span>`,
+      `<span class="pill pill-yellow">${wait}</span>`,
+      `${occRate}%`,
+      `<span class="pill pill-blue">${newC}</span>`,
+      `<span class="pill pill-green" style="background:rgba(52,211,153,0.15);color:var(--renew)">${renew}</span>`,
+      renewRate !== '-' ? `${renewRate}%` : '-',
+      `${male}남 / ${female}여`,
+      `${foreign}외 / ${domestic}내`,
+      `${worker}직 / ${student}학`
+    ];
+  });
+  makeTable('compare-table',
+    ['지점','총호실','재실','공실','입주대기','재실율','신규계약','재계약','재계약율','성별','국적','직업'],
+    rows
+  );
+
+  // Occupancy bar
+  const shortLabels = BRANCHES.map(b => b.replace('아코모가산바이홈즈-','가산-').replace('아코모회기바이홈즈','회기'));
+  const occRates = BRANCHES.map(b => ((RAW[b].입주현황['재실']||0) / RAW[b].total * 100).toFixed(1));
+
+  const ctx1 = document.getElementById('compare-occ');
+  if (ctx1) {
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: shortLabels,
+        datasets: [{ label: '재실율(%)', data: occRates,
+          backgroundColor: BRANCH_COLORS, borderRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: '#6b7585', font: { size: 12 } }, grid: { color: '#1a1f2b' } },
+          y: { max: 100, ticks: { color: '#6b7585', callback: v => v+'%' }, grid: { color: '#1a1f2b' } }
+        },
+        plugins: { ...chartDefaults.plugins, tooltip: { ...chartDefaults.plugins.tooltip, callbacks: { label: c => ` 재실율: ${c.raw}%` } }, datalabels: { display: false } }
+      }
+    });
+  }
+
+  // Renew rate bar
+  const renewRates = BRANCHES.map(b => {
+    const n = RAW[b].계약상태['신규계약']||0;
+    const r = RAW[b].계약상태['재계약']||0;
+    return (n+r) > 0 ? ((r/(n+r))*100).toFixed(1) : 0;
+  });
+
+  const ctx2 = document.getElementById('compare-renew');
+  if (ctx2) {
+    new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: shortLabels,
+        datasets: [{ label: '재계약율(%)', data: renewRates,
+          backgroundColor: BRANCH_COLORS.map(c => c+'cc'), borderRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: '#6b7585', font: { size: 12 } }, grid: { color: '#1a1f2b' } },
+          y: { max: 100, ticks: { color: '#6b7585', callback: v => v+'%' }, grid: { color: '#1a1f2b' } }
+        },
+        plugins: { ...chartDefaults.plugins, tooltip: { ...chartDefaults.plugins.tooltip, callbacks: { label: c => ` 재계약율: ${c.raw}%` } }, datalabels: { display: false } }
+      }
+    });
+  }
+}
+
+// ==================== MoM / YoY DATA ====================
+// 시뮬레이션 데이터: 최근 13개월 (2024.02 ~ 2025.02)
+// 실제 운영 시 API 또는 엑셀 연동으로 교체 가능
+const MOM_MONTHS = ['24.02','24.03','24.04','24.05','24.06','24.07','24.08','24.09','24.10','24.11','24.12','25.01','25.02'];
+
+// 전체 합산 시뮬레이션 수치 (재실수, 공실수, 신규계약, 재계약)
+const MOM_DATA_ALL = {
+  재실: [238, 245, 251, 259, 262, 270, 268, 274, 276, 272, 265, 271, 278],
+  공실: [22, 19, 17, 15, 14, 12, 14, 13, 12, 14, 16, 15, 16],
+  신규계약: [28, 31, 27, 34, 29, 36, 30, 33, 28, 31, 25, 29, 32],
+  재계약: [8, 9, 11, 10, 12, 13, 11, 14, 12, 10, 9, 11, 13],
+  총호실: [457, 457, 457, 457, 457, 457, 457, 457, 457, 457, 457, 457, 457]
+};
+
+// 지점별 시뮬레이션 (최근 13개월)
+const MOM_DATA_BRANCH = {
+  '선정릉': {
+    재실: [45,47,48,50,51,52,51,53,52,51,49,51,52],
+    공실: [8,7,6,5,5,5,6,5,6,6,7,6,6],
+    신규계약: [5,6,5,7,5,6,5,6,5,5,4,5,6],
+    재계약: [3,3,4,3,4,5,4,5,4,3,3,4,5],
+    총호실: Array(13).fill(66)
+  },
+  '남영': {
+    재실: [50,52,53,54,55,56,55,56,56,55,53,54,56],
+    공실: [5,4,4,3,3,4,4,4,4,4,5,4,4],
+    신규계약: [7,8,7,9,7,8,6,8,7,7,6,7,8],
+    재계약: [2,2,3,3,3,4,3,4,3,3,2,3,4],
+    총호실: Array(13).fill(64)
+  },
+  '망원': {
+    재실: [10,10,11,11,12,12,11,12,12,11,11,11,12],
+    공실: [7,7,6,6,6,6,6,6,6,7,7,6,6],
+    신규계약: [2,2,2,3,2,2,2,2,2,2,2,2,2],
+    재계약: [1,1,1,1,2,2,1,2,1,1,1,1,2],
+    총호실: Array(13).fill(18)
+  },
+  '안암': {
+    재실: [32,33,35,36,37,38,38,39,40,38,36,38,41],
+    공실: [2,2,1,1,0,0,0,0,0,0,0,0,0],
+    신규계약: [8,9,7,10,8,11,9,10,8,10,7,9,11],
+    재계약: [1,1,2,1,2,1,2,2,2,1,1,2,1],
+    총호실: Array(13).fill(60)
+  },
+  '아코모가산바이홈즈-101동': {
+    재실: [14,15,15,16,17,17,16,17,18,17,16,17,20],
+    공실: [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    신규계약: [2,3,2,3,3,4,3,3,3,3,2,3,3],
+    재계약: [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    총호실: Array(13).fill(39)
+  },
+  '아코모가산바이홈즈-201동': {
+    재실: [26,27,28,29,30,31,30,31,32,31,29,31,33],
+    공실: [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    신규계약: [3,3,3,4,3,4,3,4,3,3,3,3,3],
+    재계약: [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    총호실: Array(13).fill(41)
+  },
+  '아코모회기바이홈즈': {
+    재실: [46,48,50,53,55,58,58,59,59,58,55,57,60],
+    공실: [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    신규계약: [1,1,1,1,1,2,2,1,1,2,1,1,1],
+    재계약: [1,2,1,2,1,1,1,1,2,2,2,1,1],
+    총호실: Array(13).fill(152)
+  },
+  '원효로 240': {
+    재실: [15,13,11,10,5,4,9,7,7,9,6,2,4],
+    공실: [0,0,0,0,0,2,4,1,2,3,2,9,10],
+    신규계약: [0,0,0,0,0,0,0,0,0,0,0,0,1],
+    재계약: [0,0,0,0,0,0,0,0,0,0,0,0,0],
+    총호실: Array(13).fill(17)
+  }
+};
+
+let momChartInstances = {};
+
+function getMoMSource(branchKey) {
+  if (branchKey === 'all') return MOM_DATA_ALL;
+  return MOM_DATA_BRANCH[branchKey] || MOM_DATA_ALL;
+}
+
+function calcDelta(arr, periods=1) {
+  const cur = arr[arr.length - 1];
+  const prev = arr[arr.length - 1 - periods];
+  if (!prev) return { val: 0, pct: 0 };
+  return { val: cur - prev, pct: ((cur - prev) / prev * 100) };
+}
+
+function deltaArrow(delta) {
+  if (delta.val > 0) return `<span style="color:#4ade80">▲ +${delta.val} (+${delta.pct.toFixed(1)}%)</span>`;
+  if (delta.val < 0) return `<span style="color:#f87171">▼ ${delta.val} (${delta.pct.toFixed(1)}%)</span>`;
+  return `<span style="color:#6b7585">— ${delta.val}</span>`;
+}
+
+function renderMoMCharts() {
+  const sel = document.getElementById('mom-branch-select');
+  if (!sel) return;
+  const branchKey = sel.value;
+  const src = getMoMSource(branchKey);
+
+  const occRates = src.재실.map((v, i) => (v / src.총호실[i] * 100).toFixed(1));
+  const renewRates = src.재계약.map((v, i) => {
+    const denom = src.신규계약[i] + src.재계약[i];
+    return denom > 0 ? (v / denom * 100).toFixed(1) : 0;
+  });
+
+  // KPI delta cards
+  const mom_occ = calcDelta(src.재실.map((v,i) => v/src.총호실[i]*100));
+  const yoy_occ = calcDelta(src.재실.map((v,i) => v/src.총호실[i]*100), 12);
+  const mom_vac = calcDelta(src.공실);
+  const yoy_vac = calcDelta(src.공실, 12);
+  const mom_new = calcDelta(src.신규계약);
+  const yoy_new = calcDelta(src.신규계약, 12);
+  const mom_ren = calcDelta(src.재계약);
+  const yoy_ren = calcDelta(src.재계약, 12);
+
+  const kpiRow = document.getElementById('mom-kpi-row');
+  kpiRow.innerHTML = `
+    ${makeDeltaCard('재실율 (현재)', (src.재실[src.재실.length-1]/src.총호실[src.총호실.length-1]*100).toFixed(1)+'%', mom_occ, yoy_occ, '#4ade80')}
+    ${makeDeltaCard('공실 수 (현재)', src.공실[src.공실.length-1]+'개', mom_vac, yoy_vac, '#f87171', true)}
+    ${makeDeltaCard('신규계약 (현재월)', src.신규계약[src.신규계약.length-1]+'건', mom_new, yoy_new, '#60a5fa')}
+    ${makeDeltaCard('재계약 (현재월)', src.재계약[src.재계약.length-1]+'건', mom_ren, yoy_ren, '#34d399')}
+  `;
+
+  // Destroy old charts
+  Object.values(momChartInstances).forEach(c => c.destroy());
+  momChartInstances = {};
+
+  const lineOpts = (label, data, color, yLabel='') => ({
+    type: 'line',
+    data: {
+      labels: MOM_MONTHS,
+      datasets: [{
+        label,
+        data,
+        borderColor: color,
+        backgroundColor: color + '22',
+        borderWidth: 2.5,
+        pointBackgroundColor: color,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.35
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#6b7585', font: { size: 12, family: "'Noto Sans KR'" } }, grid: { color: '#1a1f2b' } },
+        y: { ticks: { color: '#6b7585', font: { size: 12 }, callback: v => yLabel ? v+yLabel : v }, grid: { color: '#1a1f2b' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1f2b',
+          borderColor: '#252b38',
+          borderWidth: 1,
+          titleColor: '#e8eaf0',
+          bodyColor: color,
+          titleFont: { size: 13 },
+          bodyFont: { size: 12 },
+          callbacks: {
+            afterLabel: (ctx) => {
+              const idx = ctx.dataIndex;
+              if (idx > 0) {
+                const prev = parseFloat(data[idx-1]);
+                const cur = parseFloat(data[idx]);
+                const d = cur - prev;
+                const arrow = d > 0 ? '▲' : d < 0 ? '▼' : '—';
+                return `MoM: ${arrow} ${d > 0 ? '+' : ''}${d.toFixed(1)}${yLabel}`;
+              }
+              if (idx >= 12) {
+                const prevY = parseFloat(data[idx-12]);
+                const cur = parseFloat(data[idx]);
+                const d = cur - prevY;
+                const arrow = d > 0 ? '▲' : d < 0 ? '▼' : '—';
+                return `YoY: ${arrow} ${d > 0 ? '+' : ''}${d.toFixed(1)}${yLabel}`;
+              }
+              return '';
+            }
+          }
+        },
+        datalabels: { display: false }
+      }
+    }
+  });
+
+  const c1 = document.getElementById('mom-occ-chart');
+  const c2 = document.getElementById('mom-renew-chart');
+  const c3 = document.getElementById('mom-newcontract-chart');
+  const c4 = document.getElementById('mom-vacant-chart');
+
+  if (c1) momChartInstances.occ = new Chart(c1, lineOpts('재실율', occRates, '#4fc3f7', '%'));
+  if (c2) momChartInstances.renew = new Chart(c2, lineOpts('재계약율', renewRates, '#34d399', '%'));
+  if (c3) momChartInstances.newc = new Chart(c3, lineOpts('신규계약 수', src.신규계약, '#60a5fa', '건'));
+  if (c4) momChartInstances.vac = new Chart(c4, lineOpts('공실 수', src.공실, '#f87171', '개'));
+
+  // Detail table
+  const tableRows = MOM_MONTHS.map((m, i) => {
+    const occR = (src.재실[i]/src.총호실[i]*100).toFixed(1);
+    const denom = src.신규계약[i] + src.재계약[i];
+    const renewR = denom > 0 ? (src.재계약[i]/denom*100).toFixed(1) : '-';
+
+    const momOccD = i > 0 ? (parseFloat(occR) - parseFloat((src.재실[i-1]/src.총호실[i-1]*100).toFixed(1))) : null;
+    const yoyOccD = i >= 12 ? (parseFloat(occR) - parseFloat((src.재실[i-12]/src.총호실[i-12]*100).toFixed(1))) : null;
+    const momVacD = i > 0 ? src.공실[i] - src.공실[i-1] : null;
+    const yoyVacD = i >= 12 ? src.공실[i] - src.공실[i-12] : null;
+
+    function fmtDelta(d, suffix='', invert=false) {
+      if (d === null) return '<span style="color:#4a5568">—</span>';
+      const isGood = invert ? d <= 0 : d >= 0;
+      const col = isGood ? '#4ade80' : '#f87171';
+      const arrow = d > 0 ? '▲' : d < 0 ? '▼' : '—';
+      return `<span style="color:${col}">${arrow} ${d > 0 ? '+' : ''}${d.toFixed ? d.toFixed(1) : d}${suffix}</span>`;
+    }
+
+    return [
+      `<strong>${m}</strong>`,
+      src.재실[i],
+      `${occR}%`,
+      fmtDelta(momOccD, '%'),
+      fmtDelta(yoyOccD, '%'),
+      src.공실[i],
+      fmtDelta(momVacD, '개', true),
+      fmtDelta(yoyVacD, '개', true),
+      src.신규계약[i],
+      src.재계약[i],
+      renewR !== '-' ? renewR+'%' : '-'
+    ];
+  });
+
+  makeTable('mom-detail-table',
+    ['월','재실수','재실율','재실MoM','재실YoY','공실수','공실MoM','공실YoY','신규계약','재계약','재계약율'],
+    tableRows.reverse() // most recent first
+  );
+}
+
+function makeDeltaCard(label, value, mom, yoy, color, invertGood=false) {
+  function fmtD(d, suffix='') {
+    if (!d || (d.val === 0 && d.pct === 0)) return `<span style="color:#4a5568">— 변동없음</span>`;
+    const isGood = invertGood ? d.val <= 0 : d.val >= 0;
+    const col = isGood ? '#4ade80' : '#f87171';
+    const arrow = d.val > 0 ? '▲' : '▼';
+    const sign = d.val > 0 ? '+' : '';
+    return `<span style="color:${col}">${arrow} ${sign}${d.val.toFixed ? d.val.toFixed(1) : d.val}${suffix} (${sign}${d.pct.toFixed(1)}%)</span>`;
+  }
+  return `
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; border-top:2px solid ${color};">
+      <div style="font-size:11px; color:var(--text-muted); font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;">${label}</div>
+      <div style="font-size:26px; font-weight:900; color:${color}; line-height:1; margin-bottom:10px;">${value}</div>
+      <div style="font-size:12px; margin-bottom:4px;"><span style="color:var(--text-muted)">MoM</span> ${fmtD(mom)}</div>
+      <div style="font-size:12px;"><span style="color:var(--text-muted)">YoY</span> ${fmtD(yoy)}</div>
+    </div>
+  `;
+  // Initialize MoM section
+  const sel = document.getElementById('mom-branch-select');
+  if (sel && sel.options.length === 1) {
+    BRANCHES.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b;
+      opt.textContent = b;
+      sel.appendChild(opt);
+    });
+  }
+  renderMoMCharts();
+}
+
+// ==================== TAB CONTROL ====================
+const initialized = {};
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.tab[onclick="showTab('${name}')"]`).classList.add('active');
+  const section = document.getElementById(name);
+  section.classList.add('active');
+  section.classList.remove('animate-in');
+  void section.offsetWidth;
+  section.classList.add('animate-in');
+
+  if (!initialized[name]) {
+    initialized[name] = true;
+    if (name === 'gender') initGender();
+    else if (name === 'nationality') initNationality();
+    else if (name === 'job') initJob();
+    else if (name === 'age') initAge();
+    else if (name === 'contract') initContract();
+    else if (name === 'compare') initCompare();
+    else if (name === 'branches') initBranches();
+    else if (name === 'insight') initInsight();
+  }
+}
+
+// ==================== INSIGHT ====================
+// 실제 데이터 기반 수치 (마케팅 통합 DB 분석 결과)
+const INSIGHT_DATA = {
+  // 지점별: 재실수, 공실수, 입주대기, 평균임대료, 월매출
+  branches: {
+    '선정릉':    { occ:52, vac:6,  wait:3,  rent:1485500, dur:10.0 },
+    '남영':      { occ:56, vac:4,  wait:4,  rent:738511,  dur:11.5 },
+    '망원':      { occ:12, vac:6,  wait:0,  rent:681667,  dur:7.0  },
+    '안암':      { occ:41, vac:0,  wait:19, rent:1254038, dur:7.1  },
+    '가산-101동': { occ:20, vac:0,  wait:4,  rent:1284889, dur:11.3 },
+    '가산-201동': { occ:33, vac:0,  wait:2,  rent:1317632, dur:12.3 },
+    '회기':      { occ:60, vac:0,  wait:26, rent:1317917, dur:8.7  },
+    '원효로240':  { occ:4,  vac:0,  wait:0,  rent:600000,  dur:3.0  }
+  },
+  // 직업별: 평균임대료, 평균계약기간(월), 건당추정매출
+  job: {
+    '직장인':     { rent:1191594, dur:10.6, revenue:12720736 },
+    '학생/학교':   { rent:1246333, dur:8.5,  revenue:10428214 },
+    '교육/훈련':   { rent:1405000, dur:2.9,  revenue:4000000  },
+    '기타':       { rent:1493636, dur:9.5,  revenue:14248182 },
+    '이사/인테리어': { rent:1435000, dur:1.5,  revenue:2010000  }
+  },
+  // 국적별: 평균임대료, 평균기간, 건당매출
+  nationality: {
+    '내국인': { rent:1297698, dur:9.6,  revenue:12404419 },
+    '외국인': { rent:1309820, dur:8.8,  revenue:11515676 },
+    '법인':   { rent:1170000, dur:12.0, revenue:14040000 }
+  },
+  // 성별: 평균임대료, 기간, 매출
+  gender: {
+    '남':   { rent:1189297, dur:9.3,  revenue:10804857 },
+    '여':   { rent:1249722, dur:9.8,  revenue:12169000 },
+    '사업자': { rent:1151905, dur:9.0,  revenue:10983333 }
+  },
+  // 연령대: 평균임대료, 기간, 매출
+  age: {
+    '20대': { rent:900588,  dur:10.0, revenue:9370000  },
+    '30대': { rent:1037680, dur:10.0, revenue:10143920 },
+    '40대': { rent:1174833, dur:10.0, revenue:11046333 },
+    '50대': { rent:976154,  dur:10.0, revenue:9574615  },
+    '60대+': { rent:1070000, dur:12.0, revenue:12333333 }
+  },
+  // 계약 유형별 LTV
+  contract: {
+    '신규계약': { rent:1130991, dur:8.9,  revenue:9752089  },
+    '재계약':   { rent:1137804, dur:9.0,  revenue:10016283 },
+    '재계약(장기)': { rent:1137804, dur:18.0, revenue:20480472 } // 재계약 2회차 시뮬
+  }
+};
+
+let insightCharts = {};
+
+function fmt(n) {
+  if (n >= 100000000) return (n/100000000).toFixed(1) + '억';
+  if (n >= 10000) return Math.round(n/10000) + '만';
+  return n.toLocaleString();
+}
+
+function makeInsightBar(id, labels, datasets, opts={}) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (insightCharts[id]) insightCharts[id].destroy();
+  insightCharts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: opts.horizontal ? 'y' : 'x',
+      scales: {
+        x: { ticks: { color:'#6b7585', font:{ size:11, family:"'Noto Sans KR'" } }, grid:{ color:'#1a1f2b' }, ...(opts.xMax ? { max:opts.xMax } : {}) },
+        y: { ticks: { color:'#6b7585', font:{ size:11, family:"'Noto Sans KR'" }, callback: opts.yFmt || (v=>v) }, grid:{ color:'#1a1f2b' } }
+      },
+      plugins: {
+        legend: { display: datasets.length > 1, labels:{ color:'#8b95a8', font:{ size:12 }, boxWidth:10 } },
+        tooltip: {
+          backgroundColor:'#1a1f2b', borderColor:'#252b38', borderWidth:1,
+          titleColor:'#e8eaf0', bodyColor:'#8b95a8',
+          titleFont:{ size:13 }, bodyFont:{ size:12 },
+          callbacks: { label: ctx => ` ${ctx.dataset.label||''}: ${opts.tFmt ? opts.tFmt(ctx.raw) : ctx.raw.toLocaleString()}` }
+        },
+        datalabels: { display: false }
+      }
+    }
+  });
+}
+
+function initInsight() {
+  const bd = INSIGHT_DATA.branches;
+  const bKeys = Object.keys(bd);
+
+  // ── LEVER 1: 공실 기회비용 ──
+  const occArr = bKeys.map(k => bd[k].occ);
+  const vacArr = bKeys.map(k => bd[k].vac);
+  const waitArr = bKeys.map(k => bd[k].wait);
+  const oppCostArr = bKeys.map(k => bd[k].vac * bd[k].rent);
+
+  makeInsightBar('ins-vacancy-bar', bKeys, [
+    { label:'재실', data:occArr, backgroundColor:'#4ade8088', borderRadius:3 },
+    { label:'공실', data:vacArr, backgroundColor:'#f8717188', borderRadius:3 },
+    { label:'입주대기', data:waitArr, backgroundColor:'#fbbf2488', borderRadius:3 }
+  ], { tFmt: v => v+'호' });
+
+  // 공실 시뮬레이터
+  const simEl = document.getElementById('ins-vacancy-sim');
+  if (simEl) {
+    const totalOppCost = oppCostArr.reduce((a,b)=>a+b,0);
+    const totalVac = vacArr.reduce((a,b)=>a+b,0);
+    const avgRent = Math.round(Object.values(bd).reduce((s,v)=>s+v.rent,0)/bKeys.length);
+    simEl.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; font-family:'Space Mono',monospace;">공실 전환율 조정</div>
+        <input type="range" id="vac-fill-slider" min="0" max="100" value="50"
+          oninput="updateVacSim(this.value)"
+          style="width:100%; accent-color:#4fc3f7; cursor:pointer;">
+        <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
+          <span>0%</span><span id="vac-fill-pct" style="color:#4fc3f7; font-weight:700;">50%</span><span>100%</span>
+        </div>
+      </div>
+      <div id="vac-sim-cards" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <div style="margin-top:12px; padding:10px 12px; background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.25); border-radius:8px;">
+        <div style="font-size:11px; color:#f87171; font-family:'Space Mono',monospace; margin-bottom:4px;">현재 공실 기회비용/월</div>
+        <div style="font-size:22px; font-weight:900; color:#f87171; font-family:'Space Mono',monospace;">₩${fmt(totalOppCost)}</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">공실 ${totalVac}호 × 평균 임대료 ${fmt(avgRent)}원</div>
+      </div>
+    `;
+    window._vacData = { bKeys, bd, totalVac, avgRent };
+    updateVacSim(50);
+  }
+
+  // 입주대기 vs 공실
+  makeInsightBar('ins-waitvsvac', bKeys, [
+    { label:'공실 수', data:vacArr, backgroundColor:'#f87171bb', borderRadius:3 },
+    { label:'입주대기', data:waitArr, backgroundColor:'#fbbf24bb', borderRadius:3 }
+  ], { tFmt: v => v+'호' });
+
+  // ── LEVER 2: 임대료 단가 ──
+  const jd = INSIGHT_DATA.job;
+  const jKeys = Object.keys(jd);
+  makeInsightBar('ins-rent-job', jKeys, [{
+    label:'평균 임대료',
+    data: jKeys.map(k=>jd[k].rent),
+    backgroundColor: ['#ffcc80','#ce93d8','#80deea','#ef9a9a','#4fc3f7'],
+    borderRadius: 4
+  }], { horizontal:true, tFmt: v=>'₩'+v.toLocaleString() });
+
+  const nd = INSIGHT_DATA.nationality;
+  const nKeys = Object.keys(nd);
+  makeInsightBar('ins-rent-nat', nKeys, [{
+    label:'평균 임대료',
+    data: nKeys.map(k=>nd[k].rent),
+    backgroundColor: ['#a5d6a7','#4fc3f7','#ffcc80'],
+    borderRadius: 4
+  }], { tFmt: v=>'₩'+v.toLocaleString() });
+
+  const gd = INSIGHT_DATA.gender;
+  const gKeys = Object.keys(gd);
+  makeInsightBar('ins-rent-gender', gKeys, [{
+    label:'평균 임대료',
+    data: gKeys.map(k=>gd[k].rent),
+    backgroundColor: ['#4fc3f7','#f48fb1','#ffcc80'],
+    borderRadius: 4
+  }], { tFmt: v=>'₩'+v.toLocaleString() });
+
+  const agd = INSIGHT_DATA.age;
+  const agKeys = Object.keys(agd);
+  makeInsightBar('ins-rent-age', agKeys, [{
+    label:'평균 임대료',
+    data: agKeys.map(k=>agd[k].rent),
+    backgroundColor: ['#80deea','#ce93d8','#4fc3f7','#a5d6a7','#ffcc80','#ef9a9a'],
+    borderRadius: 4
+  }], { tFmt: v=>'₩'+v.toLocaleString() });
+
+  // ── LEVER 3: 계약기간 ──
+  makeInsightBar('ins-dur-job', jKeys, [{
+    label:'평균 계약기간(월)',
+    data: jKeys.map(k=>jd[k].dur),
+    backgroundColor: ['#ffcc80','#ce93d8','#80deea','#ef9a9a','#4fc3f7'],
+    borderRadius: 4
+  }], { horizontal:true, tFmt: v=>v+'개월' });
+
+  makeInsightBar('ins-dur-nat', nKeys, [{
+    label:'평균 계약기간(월)',
+    data: nKeys.map(k=>nd[k].dur),
+    backgroundColor: ['#a5d6a7','#4fc3f7','#ffcc80'],
+    borderRadius: 4
+  }], { tFmt: v=>v+'개월' });
+
+  // LTV 재계약
+  const cd = INSIGHT_DATA.contract;
+  const cKeys = Object.keys(cd);
+  makeInsightBar('ins-ltv-renew', cKeys, [{
+    label:'추정 LTV (임대료×기간)',
+    data: cKeys.map(k=>cd[k].revenue),
+    backgroundColor: ['#60a5fa','#34d399','#818cf8'],
+    borderRadius: 4
+  }], { tFmt: v=>'₩'+fmt(v) });
+
+  makeInsightBar('ins-dur-gender', gKeys, [{
+    label:'평균 계약기간(월)',
+    data: gKeys.map(k=>gd[k].dur),
+    backgroundColor: ['#4fc3f7','#f48fb1','#ffcc80'],
+    borderRadius: 4
+  }], { tFmt: v=>v+'개월' });
+
+  // ── TOTAL: 세그먼트별 건당 매출 ──
+  const allSegs = ['직장인','학생/학교','기타','교육/훈련','이사/인테리어'];
+  const allRevs = allSegs.map(k => INSIGHT_DATA.job[k]?.revenue || 0);
+  makeInsightBar('ins-total-revenue', allSegs, [{
+    label:'건당 추정매출 (임대료×기간)',
+    data: allRevs,
+    backgroundColor: ['#ffcc80','#ce93d8','#ef9a9a','#80deea','#4fc3f7'],
+    borderRadius: 4
+  }], { horizontal:true, tFmt: v=>'₩'+fmt(v) });
+
+  // 지점별 월매출
+  const monthlyRev = bKeys.map(k => bd[k].occ * bd[k].rent);
+  const ctx2 = document.getElementById('ins-branch-monthly');
+  if (ctx2) {
+    if (insightCharts['ins-branch-monthly']) insightCharts['ins-branch-monthly'].destroy();
+    insightCharts['ins-branch-monthly'] = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: bKeys,
+        datasets: [
+          { label:'현재 월매출 추정', data:monthlyRev, backgroundColor:BRANCH_COLORS, borderRadius:4 },
+          { label:'공실 포함 잠재 월매출', data:bKeys.map(k=>(bd[k].occ+bd[k].vac)*bd[k].rent), backgroundColor:BRANCH_COLORS.map(c=>c+'44'), borderRadius:4, type:'bar' }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        scales: {
+          x:{ ticks:{color:'#6b7585',font:{size:10,family:"'Noto Sans KR'"}}, grid:{color:'#1a1f2b'} },
+          y:{ ticks:{color:'#6b7585',font:{size:11},callback:v=>'₩'+fmt(v)}, grid:{color:'#1a1f2b'} }
+        },
+        plugins: {
+          legend:{ labels:{ color:'#8b95a8', font:{size:12}, boxWidth:10 } },
+          tooltip:{ backgroundColor:'#1a1f2b', borderColor:'#252b38', borderWidth:1, titleColor:'#e8eaf0', bodyColor:'#8b95a8', titleFont:{size:13}, bodyFont:{size:12},
+            callbacks:{ label: c => ` ${c.dataset.label}: ₩${fmt(c.raw)}` }
+          },
+          datalabels:{ display:false }
+        }
+      }
+    });
+  }
+
+  // ── 시뮬레이터 초기화 ──
+  calcSim();
+
+  // ── 인사이트 카드 ──
+  renderInsightCards();
+}
+
+function updateVacSim(pct) {
+  if (!window._vacData) return;
+  const { bKeys, bd, totalVac, avgRent } = window._vacData;
+  const rate = parseInt(pct) / 100;
+  document.getElementById('vac-fill-pct').textContent = pct + '%';
+  const addedOcc = Math.round(totalVac * rate);
+  const addedRev = addedOcc * avgRent;
+  const el = document.getElementById('vac-sim-cards');
+  if (el) {
+    el.innerHTML = `
+      <div style="background:rgba(79,195,247,0.08); border:1px solid rgba(79,195,247,0.2); border-radius:8px; padding:10px 14px;">
+        <div style="font-size:11px; color:#4fc3f7; font-family:'Space Mono',monospace; margin-bottom:4px;">전환 시 추가 입주자</div>
+        <div style="font-size:20px; font-weight:900; color:#4fc3f7;">+${addedOcc}호</div>
+      </div>
+      <div style="background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.2); border-radius:8px; padding:10px 14px;">
+        <div style="font-size:11px; color:#4ade80; font-family:'Space Mono',monospace; margin-bottom:4px;">추가 월매출</div>
+        <div style="font-size:20px; font-weight:900; color:#4ade80;">+₩${fmt(addedRev)}</div>
+      </div>
+      <div style="background:rgba(206,147,216,0.08); border:1px solid rgba(206,147,216,0.2); border-radius:8px; padding:10px 14px;">
+        <div style="font-size:11px; color:#ce93d8; font-family:'Space Mono',monospace; margin-bottom:4px;">연간 환산 추가매출</div>
+        <div style="font-size:20px; font-weight:900; color:#ce93d8;">+₩${fmt(addedRev*12)}</div>
+      </div>
+    `;
+  }
+}
+
+let simScenarioChart = null;
+function calcSim() {
+  const total   = parseFloat(document.getElementById('sim-total')?.value || 457);
+  const occPct  = parseFloat(document.getElementById('sim-occ')?.value || 61) / 100;
+  const rent    = parseFloat(document.getElementById('sim-rent')?.value || 1200000);
+  const dur     = parseFloat(document.getElementById('sim-dur')?.value || 9.5);
+  const renewPct= parseFloat(document.getElementById('sim-renew')?.value || 26) / 100;
+  const renewExt= parseFloat(document.getElementById('sim-renew-ext')?.value || 6);
+
+  const occupants = Math.round(total * occPct);
+  const monthlyRev = occupants * rent;
+  const annualRev  = monthlyRev * 12;
+
+  // effective avg duration accounting for renewals
+  const effectiveDur = dur * (1 + renewPct * (renewExt / dur));
+  const ltv = rent * effectiveDur;
+  const annualTurnoverCost = occupants * (1 - renewPct) * rent; // 1달치 공실 가정
+
+  const el = document.getElementById('sim-result');
+  if (el) {
+    el.innerHTML = `
+      <div class="sim-result-card">
+        <div class="sim-result-val" style="color:#4fc3f7">${occupants}명</div>
+        <div class="sim-result-lbl">현재 입주자 수</div>
+      </div>
+      <div class="sim-result-card">
+        <div class="sim-result-val" style="color:#4ade80">₩${fmt(monthlyRev)}</div>
+        <div class="sim-result-lbl">월 임대료 수입</div>
+      </div>
+      <div class="sim-result-card">
+        <div class="sim-result-val" style="color:#f59e0b">₩${fmt(annualRev)}</div>
+        <div class="sim-result-lbl">연간 임대료 추정</div>
+      </div>
+      <div class="sim-result-card">
+        <div class="sim-result-val" style="color:#ce93d8">₩${fmt(ltv)}</div>
+        <div class="sim-result-lbl">입주자 1인당 LTV</div>
+      </div>
+      <div class="sim-result-card">
+        <div class="sim-result-val" style="color:#ef9a9a">₩${fmt(annualTurnoverCost)}</div>
+        <div class="sim-result-lbl">연간 이탈 기회비용</div>
+      </div>
+      <div class="sim-result-card">
+        <div class="sim-result-val" style="color:#a5d6a7">${effectiveDur.toFixed(1)}개월</div>
+        <div class="sim-result-lbl">재계약 반영 유효 기간</div>
+      </div>
+    `;
+  }
+
+  // Scenario chart
+  const ctx = document.getElementById('sim-scenario-chart');
+  if (!ctx) return;
+  if (simScenarioChart) simScenarioChart.destroy();
+
+  // 3 scenarios: current / +10% occ / +재계약10%
+  const s1 = annualRev;
+  const s2 = Math.round(total * Math.min(occPct + 0.1, 1)) * rent * 12;
+  const s3 = occupants * rent * (dur * (1 + (renewPct+0.1) * (renewExt/dur))) * 12 / dur;
+  const s4 = occupants * (rent * 1.05) * 12;
+  const s5 = Math.round(total * Math.min(occPct + 0.1, 1)) * (rent*1.05) * (dur*(1+(renewPct+0.1)*(renewExt/dur))) * 12 / dur;
+
+  simScenarioChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['현재', '공실10%↓', '재계약율+10%', '임대료+5%', '복합 최적화'],
+      datasets: [{
+        label:'연간 추정매출',
+        data: [s1,s2,s3,s4,s5],
+        backgroundColor: ['#4a5568','#4fc3f7','#34d399','#f48fb1','#f59e0b'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales: {
+        x:{ ticks:{color:'#6b7585',font:{size:12,family:"'Noto Sans KR'"}}, grid:{color:'#1a1f2b'} },
+        y:{ ticks:{color:'#6b7585',font:{size:12}, callback:v=>'₩'+fmt(v)}, grid:{color:'#1a1f2b'} }
+      },
+      plugins: {
+        legend:{ display:false },
+        tooltip:{ backgroundColor:'#1a1f2b', borderColor:'#252b38', borderWidth:1,
+          titleColor:'#e8eaf0', bodyColor:'#8b95a8', titleFont:{size:13}, bodyFont:{size:12},
+          callbacks:{
+            label: c => ` 연간매출: ₩${fmt(c.raw)}`,
+            afterLabel: c => {
+              const diff = c.raw - s1;
+              if (diff === 0) return ' (기준)';
+              return ` 기준 대비 ${diff>0?'+':''}₩${fmt(diff)} (${((diff/s1)*100).toFixed(1)}%)`;
+            }
+          }
+        },
+        datalabels:{ display:false }
+      }
+    }
+  });
+}
+
+function renderInsightCards() {
+  const el = document.getElementById('insight-cards');
+  if (!el) return;
+  const cards = [
+    {
+      type:'positive', tag:'기회',
+      title:'직장인 고객이 LTV 최고 — 타깃 마케팅 강화',
+      body:'직장인 고객의 건당 추정 매출은 <strong style="color:#ffcc80">₩12.7M</strong>으로 학생(₩10.4M) 대비 22% 높습니다. 직장인 비율이 높은 선정릉·남영·가산 지점에서 직장인 리텐션 프로그램을 우선 운영하세요.',
+      metric: '₩12.7M', metricColor:'#ffcc80', metricLabel:'직장인 1건 추정 LTV'
+    },
+    {
+      type:'action', tag:'액션',
+      title:'재계약 고객은 기간이 길다 — 재계약 유인 강화',
+      body:'재계약 계약의 평균 기간은 9개월로 신규계약(8.9개월)과 비슷하지만, 2회차 재계약 시 <strong style="color:#34d399">₩20.5M</strong>으로 LTV가 2배 이상 증가합니다. 중기 재계약 특약·할인 등으로 연장을 유도하세요.',
+      metric: '+110%', metricColor:'#34d399', metricLabel:'2회 재계약 시 LTV 증가율'
+    },
+    {
+      type:'warning', tag:'주의',
+      title:'회기·안암 입주대기 수요가 공실을 초과',
+      body:'회기 지점은 <strong style="color:#fbbf24">입주대기 26호</strong>임에도 공실 0호로 수요 초과 상태입니다. 안암도 입주대기 19호입니다. 호실 확장·전환·대기자 이웃 지점 안내 시 월 최대 <strong style="color:#fbbf24">₩59M</strong> 추가 매출 가능합니다.',
+      metric: '45명', metricColor:'#fbbf24', metricLabel:'회기+안암 초과 대기수요'
+    },
+    {
+      type:'risk', tag:'리스크',
+      title:'망원·원효로 공실율 높음 — 기회비용 월 ₩10M+',
+      body:'망원 6호 공실(임대료 681K), 선정릉 1호 공실(1.5M) 합산 <strong style="color:#f87171">월 기회비용 약 ₩5.6M</strong>. 단기 임대·공유오피스 전환, SNS 타겟 광고 등 즉각적인 공실 해소 전략이 필요합니다.',
+      metric: '₩5.6M', metricColor:'#f87171', metricLabel:'공실 기회비용/월'
+    },
+    {
+      type:'action', tag:'액션',
+      title:'여성·40대 고객이 임대료 단가 높음',
+      body:'여성 고객의 평균 임대료는 <strong style="color:#f48fb1">₩1.25M</strong>으로 남성(₩1.19M)보다 5% 높고, 40대 고객이 연령대 중 최고 단가입니다. 이 세그먼트를 겨냥한 프리미엄 인테리어·편의시설 투자의 ROI가 높습니다.',
+      metric: '₩1.25M', metricColor:'#f48fb1', metricLabel:'여성 고객 평균 임대료'
+    },
+    {
+      type:'positive', tag:'기회',
+      title:'법인 고객은 12개월 장기계약 — 안정 매출원',
+      body:'법인 고객의 평균 계약기간은 <strong style="color:#a5d6a7">12개월</strong>로 전체 평균(9.3개월) 대비 29% 길어 매출 안정성이 높습니다. 안암 지점 법인 9개의 성공 사례를 다른 지점으로 확대하는 B2B 영업을 검토하세요.',
+      metric: '12개월', metricColor:'#a5d6a7', metricLabel:'법인 평균 계약기간'
+    }
+  ];
+
+  el.innerHTML = cards.map(c => `
+    <div class="insight-card ${c.type}">
+      <div><span class="insight-tag tag-${c.type}">${c.tag}</span></div>
+      <div class="insight-title">${c.title}</div>
+      <div class="insight-metric" style="color:${c.metricColor}; font-family:'Space Mono',monospace;">${c.metric}
+        <span style="font-size:12px; color:var(--text-muted); font-family:'Noto Sans KR',sans-serif; font-weight:400;"> ${c.metricLabel}</span>
+      </div>
+      <div class="insight-body">${c.body}</div>
+    </div>
+  `).join('');
+}
+
+// Init overview on load
+window.addEventListener('load', () => {
+  initOverview();
+  initialized['overview'] = true;
+});
+</script>
+</body>
+</html>
