@@ -18,9 +18,9 @@
     --accent3: #a5d6a7;
     --accent4: #ffcc80;
     --accent5: #ce93d8;
-    --text: #0f172a;
-    --text-muted: #64748b;
-    --text-dim: #94a3b8;
+    --text: #000000;
+    --text-muted: #111827;
+    --text-dim: #334155;
     --male: #4fc3f7;
     --female: #f48fb1;
     --corp: #ffcc80;
@@ -569,7 +569,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style id="light-mode-refinements">
-    body { background: #f8fafc !important; color: #0f172a; }
+    body { background: #f8fafc !important; color: #000000; } body, body .text-muted, body .summary-sub, body .section-desc { color: #111827 !important; }
     * { border-color: #e2e8f0; }
     button:hover, .tab:hover { background-color: #f1f5f9 !important; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -583,7 +583,7 @@
     }
     tr:hover td { background-color: #f8fafc !important; }
     thead { background: #f8fafc !important; }
-    th { color: #475569 !important; }
+    th { color: #0f172a !important; font-weight: 600; } td { color: #000000; }
   </style>
   </head>
 <body>
@@ -629,6 +629,26 @@
   <div class="section-desc">8개 지점 전체 호실 기준 주요 지표</div>
 
   <div class="summary-row">
+    <div class="summary-card c5">
+      <div class="summary-label">여성 비율</div>
+      <div class="summary-value" style="color:var(--accent5)">57%</div>
+      <div class="summary-sub">정보있는 호실 기준</div>
+    </div>
+    <div class="summary-card c6">
+      <div class="summary-label">외국인 비율</div>
+      <div class="summary-value" style="color:var(--accent1)">61%</div>
+      <div class="summary-sub">국적 확인 호실 기준</div>
+    </div>
+    <div class="summary-card c2">
+      <div class="summary-label">신규 계약</div>
+      <div class="summary-value" style="color:var(--accent2)">166</div>
+      <div class="summary-sub">전체 대비 36.3%</div>
+    </div>
+    <div class="summary-card c3">
+      <div class="summary-label">재계약</div>
+      <div class="summary-value" style="color:var(--accent3)">59</div>
+      <div class="summary-sub">전체 대비 12.9%</div>
+    </div>
     <div class="summary-card c1">
       <div class="summary-label">총 호실 수</div>
       <div class="summary-value" style="color:var(--accent1)">457</div>
@@ -649,41 +669,6 @@
       <div class="summary-value" style="color:var(--waiting)">55</div>
       <div class="summary-sub">확정 입주 대기자</div>
     </div>
-    <div class="summary-card c2">
-      <div class="summary-label">신규 계약</div>
-      <div class="summary-value" style="color:var(--accent2)">166</div>
-      <div class="summary-sub">전체 대비 36.3%</div>
-    </div>
-    <div class="summary-card c3">
-      <div class="summary-label">재계약</div>
-      <div class="summary-value" style="color:var(--accent3)">59</div>
-      <div class="summary-sub">전체 대비 12.9%</div>
-    </div>
-    <div class="summary-card c5">
-      <div class="summary-label">여성 비율</div>
-      <div class="summary-value" style="color:var(--accent5)">57%</div>
-      <div class="summary-sub">정보있는 호실 기준</div>
-    </div>
-    <div class="summary-card c6">
-      <div class="summary-label">외국인 비율</div>
-      <div class="summary-value" style="color:var(--accent1)">61%</div>
-      <div class="summary-sub">국적 확인 호실 기준</div>
-    </div>
-  </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-title"><span class="dot"></span>전체 입주현황 분포</div>
-      <div class="chart-wrap md">
-        <canvas id="overview-occupancy"></canvas>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>계약 형태 분포</div>
-      <div class="chart-wrap md">
-        <canvas id="overview-contract"></canvas>
-      </div>
-    </div>
   </div>
 
   <div class="grid-3">
@@ -703,6 +688,21 @@
       <div class="card-title"><span class="dot" style="background:var(--accent4)"></span>직업 분포 (확인 호실)</div>
       <div class="chart-wrap">
         <canvas id="overview-job"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>전체 입주현황 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="overview-occupancy"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>계약 형태 분포</div>
+      <div class="chart-wrap md">
+        <canvas id="overview-contract"></canvas>
       </div>
     </div>
   </div>
@@ -1174,6 +1174,27 @@ let RAW = {};
       window._allContracts = contracts;
       const vacancy = vacancyRes.data || [];
       const tours = toursRes.data || [];
+      const _normBranch = (b) => {
+        if (!b) return null;
+        const x = String(b).replace(/\s+/g, '');
+        if (x.includes('어반')) return null;
+        if (x.includes('아코모') && x.includes('가산')) return '아코모 가산';
+        if (x.includes('아코모') && x.includes('회기')) return '아코모 회기';
+        if (x.startsWith('홈즈') && x.length > 2) return x.replace(/^홈즈/, '');
+        return b;
+      };
+      const _applyNorm = (arr) => {
+        for (let i = arr.length - 1; i >= 0; i--) {
+          const nb = _normBranch(arr[i].branch);
+          if (nb === null) arr.splice(i, 1);
+          else arr[i].branch = nb;
+        }
+      };
+      _applyNorm(contracts);
+      _applyNorm(vacancy);
+      _applyNorm(tours);
+      window._allContracts = contracts;
+
 
       // Get unique branches from vacancy
       const branchSet = new Set();
@@ -1566,13 +1587,13 @@ function makeTable(id, headers, rows) {
 }
 
 function initGender() {
-  const keys = ['남','여','사업자','정보없음'];
-  const colors = { '남': '#4fc3f7', '여': '#f48fb1', '사업자': '#ffcc80', '정보없음': '#4a5568' };
+  const keys = ['남','여'];
+  const colors = { '남': '#4fc3f7', '여': '#f48fb1' };
 
   // Overall donut (exclude 공실)
-  const total = { '남': 0, '여': 0, '사업자': 0, '정보없음': 0 };
+  const total = { '남': 0, '여': 0 };
   BRANCHES.forEach(b => {
-    ['남','여','사업자','정보없음'].forEach(k => total[k] += (RAW[b].성별[k]||0));
+    ['남','여'].forEach(k => total[k] += (RAW[b].성별[k]||0));
   });
   makeDonut('gender-overall', Object.keys(total), Object.values(total), Object.values(colors));
   makeStackedBranch('gender-by-branch', keys, colors, (b,k) => RAW[b].성별[k]||0);
@@ -1585,12 +1606,10 @@ function initGender() {
       b,
       `${d['남']||0} (${pct(d['남']||0, t)})`,
       `${d['여']||0} (${pct(d['여']||0, t)})`,
-      `${d['사업자']||0} (${pct(d['사업자']||0, t)})`,
-      `${d['정보없음']||0} (${pct(d['정보없음']||0, t)})`,
       t
     ];
   });
-  makeTable('gender-table', ['지점','남','여','사업자','정보없음','합계'], rows);
+  makeTable('gender-table', ['지점','남','여','합계'], rows);
 }
 
 function initNationality() {
@@ -1798,7 +1817,7 @@ function initCompare() {
       data: {
         labels: shortLabels,
         datasets: [{ label: '재계약율(%)', data: renewRates,
-          backgroundColor: BRANCH_COLORS.map(c => c+'cc'), borderRadius: 4 }]
+          backgroundColor: Object.values(BRANCH_COLORS).map(c => c+'cc'), borderRadius: 4 }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
@@ -2333,7 +2352,7 @@ function initInsight() {
         labels: bKeys,
         datasets: [
           { label:'현재 월매출 추정', data:monthlyRev, backgroundColor:BRANCH_COLORS, borderRadius:4 },
-          { label:'공실 포함 잠재 월매출', data:bKeys.map(k=>(bd[k].occ+bd[k].vac)*bd[k].rent), backgroundColor:BRANCH_COLORS.map(c=>c+'44'), borderRadius:4, type:'bar' }
+          { label:'공실 포함 잠재 월매출', data:bKeys.map(k=>(bd[k].occ+bd[k].vac)*bd[k].rent), backgroundColor:Object.values(BRANCH_COLORS).map(c=>c+'44'), borderRadius:4, type:'bar' }
         ]
       },
       options: {
