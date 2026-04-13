@@ -582,6 +582,12 @@
       border: 1px solid #e2e8f0 !important;
     }
     tr:hover td { background-color: #f8fafc !important; }
+    .summary-label { color: #111827 !important; font-weight: 500; }
+    .summary-sub { color: #334155 !important; }
+    .section-desc { color: #334155 !important; }
+    .card-title { color: #000000 !important; }
+    .section-title { color: #000000 !important; }
+    .tab, .tab-label { color: #1f2937 !important; }
     thead { background: #f8fafc !important; }
     th { color: #0f172a !important; font-weight: 600; } td { color: #000000; }
   </style>
@@ -603,7 +609,7 @@
     </div>
   </div>
   <div class="header-meta">
-    <div class="data-badge">총 457 호실 / 8개 지점</div>
+    <div class="data-badge">총 457 호실 / <span id="dyn-branches">8</span>개 지점</div>
     <div class="data-badge" style="border-color:rgba(164,213,167,0.3); color:var(--accent3); background:rgba(164,213,167,0.08);">데이터 기준: 마케팅 통합 DB</div>
   </div>
 </header>
@@ -626,7 +632,7 @@
 <!-- ===== OVERVIEW ===== -->
 <section id="overview" class="section active animate-in">
   <div class="section-heading">전체 고객 현황 요약</div>
-  <div class="section-desc">8개 지점 전체 호실 기준 주요 지표</div>
+  <div class="section-desc"><span id="dyn-branches">8</span>개 지점 전체 호실 기준 주요 지표</div>
 
   <div class="summary-row">
     <div class="summary-card c5">
@@ -652,7 +658,7 @@
     <div class="summary-card c1">
       <div class="summary-label">총 호실 수</div>
       <div class="summary-value" style="color:var(--accent1)">457</div>
-      <div class="summary-sub">8개 지점 합산</div>
+      <div class="summary-sub"><span id="dyn-branches">8</span>개 지점 합산</div>
     </div>
     <div class="summary-card c7">
       <div class="summary-label">재실 (입주)</div>
@@ -1201,6 +1207,11 @@ let RAW = {};
       vacancy.forEach(v => branchSet.add(v.branch));
       contracts.forEach(c => { if(c.branch) branchSet.add(c.branch); });
       BRANCHES = Array.from(branchSet).sort();
+      try {
+        const n = BRANCHES.length;
+        document.querySelectorAll('#dyn-branches').forEach(el => el.textContent = n);
+      } catch(e){}
+
 
       // Build RAW per branch
       BRANCHES.forEach(b => {
@@ -1443,16 +1454,14 @@ function initOverview() {
   );
 
   // Gender overall (exclude 공실, 정보없음)
-  const genderTotal = { '남': 0, '여': 0, '사업자': 0, '정보없음': 0, '공실(해당없음)': 0 };
+  const genderTotal = { '남': 0, '여': 0 };
   BRANCHES.forEach(b => {
     Object.entries(RAW[b].성별).forEach(([k,v]) => {
       if (genderTotal[k] !== undefined) genderTotal[k] += v;
-      else genderTotal['정보없음'] = (genderTotal['정보없음']||0) + v;
     });
   });
-  const genderFiltered = Object.fromEntries(Object.entries(genderTotal).filter(([k])=>k!=='공실(해당없음)'));
-  makeDonut('overview-gender', Object.keys(genderFiltered), Object.values(genderFiltered),
-    ['#4fc3f7','#f48fb1','#ffcc80','#4a5568']);
+  makeDonut('overview-gender', Object.keys(genderTotal), Object.values(genderTotal),
+    ['#4fc3f7','#f48fb1']);
 
   // Nationality overall
   const natTotal = {};
