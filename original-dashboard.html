@@ -1199,6 +1199,7 @@ let RAW = {};
       _applyNorm(contracts);
       _applyNorm(vacancy);
       _applyNorm(tours);
+      recomputeMoMData(contracts, vacancy);
       window._allContracts = contracts;
 
 
@@ -1843,10 +1844,10 @@ function initCompare() {
 // ==================== MoM / YoY DATA ====================
 // 시뮬레이션 데이터: 최근 13개월 (2024.02 ~ 2025.02)
 // 실제 운영 시 API 또는 엑셀 연동으로 교체 가능
-const MOM_MONTHS = ['24.02','24.03','24.04','24.05','24.06','24.07','24.08','24.09','24.10','24.11','24.12','25.01','25.02'];
+let MOM_MONTHS = ['24.02','24.03','24.04','24.05','24.06','24.07','24.08','24.09','24.10','24.11','24.12','25.01','25.02'];
 
 // 전체 합산 시뮬레이션 수치 (재실수, 공실수, 신규계약, 재계약)
-const MOM_DATA_ALL = {
+let MOM_DATA_ALL = {
   재실: [238, 245, 251, 259, 262, 270, 268, 274, 276, 272, 265, 271, 278],
   공실: [22, 19, 17, 15, 14, 12, 14, 13, 12, 14, 16, 15, 16],
   신규계약: [28, 31, 27, 34, 29, 36, 30, 33, 28, 31, 25, 29, 32],
@@ -1855,7 +1856,7 @@ const MOM_DATA_ALL = {
 };
 
 // 지점별 시뮬레이션 (최근 13개월)
-const MOM_DATA_BRANCH = {
+let MOM_DATA_BRANCH = {
   '선정릉': {
     재실: [45,47,48,50,51,52,51,53,52,51,49,51,52],
     공실: [8,7,6,5,5,5,6,5,6,6,7,6,6],
@@ -1915,6 +1916,73 @@ const MOM_DATA_BRANCH = {
 };
 
 let momChartInstances = {};
+
+function recomputeMoMData(contracts, vacancy) {
+  var now = new Date();
+  var months = [];
+  var monthKeys = [];
+  for (var i = 12; i >= 0; i--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    var yy = String(d.getFullYear()).slice(2);
+    var mm = String(d.getMonth()+1).padStart(2,'0');
+    months.push(yy + '.' + mm);
+    monthKeys.push({y: d.getFullYear(), m: d.getMonth()});
+  }
+  var totalUnitsByBranch = {};
+  var totalUnitsAll = 0;
+  vacancy.forEach(function(v) {
+    var t = v.total_units || 0;
+    totalUnitsByBranch[v.branch] = (totalUnitsByBranch[v.branch] || 0) + t;
+    totalUnitsAll += t;
+  });
+  var RENEW_LABEL = '\uc7ac\uacc4\uc57d(\uc5f0\uc7a5/\uacfc\uac70 \uace0\uac1d)';
+  var EARLY_LABEL = '\uc911\ub3c4\ud1f4\uc2e4';
+  function inMonth(dateStr, mk) {
+    if (!dateStr) return false;
+    var dd = new Date(dateStr);
+    return dd.getFullYear() === mk.y && dd.getMonth() === mk.m;
+  }
+  function monthEnd(mk) { return new Date(mk.y, mk.m + 1, 0, 23, 59, 59); }
+  function monthStart(mk) { return new Date(mk.y, mk.m, 1); }
+  function isActive(c, mk) {
+    if (!c.contract_start) return false;
+    var cs = new Date(c.contract_start);
+    if (cs > monthEnd(mk)) return false;
+    if (c.contract_end) {
+      var ce = new Date(c.contract_end);
+      if (ce < monthStart(mk)) return false;
+    }
+    return true;
+  }
+  function buildFor(branchFilter) {
+    var cs = branchFilter === null ? contracts : contracts.filter(function(c){return c.branch === branchFilter;});
+    var totalU = branchFilter === null ? totalUnitsAll : (totalUnitsByBranch[branchFilter] || 0);
+    var obj = {'\uc7ac\uc2e4':[],'\uacf5\uc2e4':[],'\uc2e0\uaddc\uacc4\uc57d':[],'\uc7ac\uacc4\uc57d':[],'\ucd1d\ud638\uc2e4':[]};
+    monthKeys.forEach(function(mk) {
+      var active = 0, newCnt = 0, renewCnt = 0;
+      cs.forEach(function(c) {
+        if (isActive(c, mk)) active++;
+        if (inMonth(c.contract_start, mk)) {
+          if (c.renewal_type === RENEW_LABEL) renewCnt++;
+          else if (c.renewal_type !== EARLY_LABEL) newCnt++;
+        }
+      });
+      obj['\uc7ac\uc2e4'].push(active);
+      obj['\uacf5\uc2e4'].push(Math.max(0, totalU - active));
+      obj['\uc2e0\uaddc\uacc4\uc57d'].push(newCnt);
+      obj['\uc7ac\uacc4\uc57d'].push(renewCnt);
+      obj['\ucd1d\ud638\uc2e4'].push(totalU);
+    });
+    return obj;
+  }
+  MOM_MONTHS.splice(0, MOM_MONTHS.length);
+  months.forEach(function(m){MOM_MONTHS.push(m);});
+  var allObj = buildFor(null);
+  Object.keys(MOM_DATA_ALL).forEach(function(k){delete MOM_DATA_ALL[k];});
+  Object.assign(MOM_DATA_ALL, allObj);
+  Object.keys(MOM_DATA_BRANCH).forEach(function(k){delete MOM_DATA_BRANCH[k];});
+  BRANCHES.forEach(function(b){ MOM_DATA_BRANCH[b] = buildFor(b); });
+}
 
 function getMoMSource(branchKey) {
   if (branchKey === 'all') return MOM_DATA_ALL;
