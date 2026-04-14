@@ -1313,7 +1313,6 @@ let RAW = {};
       try {
         const stats = await fetchSupabaseData();
         console.log('Supabase data loaded:', stats);
-        recomputeMoMData(window._allContracts, window._allVacancy);
       } catch(e) {
         console.error('Supabase fetch failed:', e);
       }
@@ -1917,6 +1916,11 @@ var MOM_DATA_BRANCH = {
 };
 
 let momChartInstances = {};
+
+// Supabase data override
+if (window._allContracts && window._allContracts.length > 0) {
+  recomputeMoMData(window._allContracts, window._allVacancy);
+}
 
 function recomputeMoMData(contracts, vacancy) {
   var now = new Date();
