@@ -1976,12 +1976,9 @@ function recomputeMoMData(contracts, vacancy) {
     });
     return obj;
   }
-  MOM_MONTHS.splice(0, MOM_MONTHS.length);
-  months.forEach(function(m){MOM_MONTHS.push(m);});
-  var allObj = buildFor(null);
-  Object.keys(MOM_DATA_ALL).forEach(function(k){delete MOM_DATA_ALL[k];});
-  Object.assign(MOM_DATA_ALL, allObj);
-  Object.keys(MOM_DATA_BRANCH).forEach(function(k){delete MOM_DATA_BRANCH[k];});
+  MOM_MONTHS = months.slice();
+  MOM_DATA_ALL = buildFor(null);
+  MOM_DATA_BRANCH = {};
   BRANCHES.forEach(function(b){ MOM_DATA_BRANCH[b] = buildFor(b); });
 }
 
