@@ -2196,8 +2196,8 @@ function showTab(name) {
     else if (name === 'job') initJob();
     else if (name === 'age') initAge();
     else if (name === 'contract') initContract();
-      else if (name === 'customers') initCustomers();
-    else if (name === 'compare') initCompare(); renderMoMCharts();
+    else if (name === 'customers') initCustomers();
+    else if (name === 'compare') { initCompare(); renderMoMCharts(); }
     else if (name === 'branches') initBranches();
     else if (name === 'insight') initInsight();
   }
