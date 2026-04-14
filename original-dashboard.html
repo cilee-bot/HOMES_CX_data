@@ -1178,8 +1178,8 @@ let RAW = {};
       ]);
       const contracts = contractsRes.data || [];
       window._allContracts = contracts;
-      window._allVacancy = vacancy;
       const vacancy = vacancyRes.data || [];
+      window._allVacancy = vacancy;
       const tours = toursRes.data || [];
       const _normBranch = (b) => {
         if (!b) return null;
