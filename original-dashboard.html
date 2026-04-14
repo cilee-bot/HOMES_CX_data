@@ -1178,6 +1178,7 @@ let RAW = {};
       ]);
       const contracts = contractsRes.data || [];
       window._allContracts = contracts;
+      window._allVacancy = vacancy;
       const vacancy = vacancyRes.data || [];
       const tours = toursRes.data || [];
       const _normBranch = (b) => {
@@ -1207,7 +1208,6 @@ let RAW = {};
       vacancy.forEach(v => branchSet.add(v.branch));
       contracts.forEach(c => { if(c.branch) branchSet.add(c.branch); });
       BRANCHES = Array.from(branchSet).sort();
-      recomputeMoMData(contracts, vacancy);
       try {
         const n = BRANCHES.length;
         document.querySelectorAll('#dyn-branches').forEach(el => el.textContent = n);
@@ -1313,6 +1313,7 @@ let RAW = {};
       try {
         const stats = await fetchSupabaseData();
         console.log('Supabase data loaded:', stats);
+        recomputeMoMData(window._allContracts, window._allVacancy);
       } catch(e) {
         console.error('Supabase fetch failed:', e);
       }
