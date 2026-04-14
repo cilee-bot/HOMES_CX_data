@@ -1199,7 +1199,6 @@ let RAW = {};
       _applyNorm(contracts);
       _applyNorm(vacancy);
       _applyNorm(tours);
-      recomputeMoMData(contracts, vacancy);
       window._allContracts = contracts;
 
 
@@ -1208,6 +1207,7 @@ let RAW = {};
       vacancy.forEach(v => branchSet.add(v.branch));
       contracts.forEach(c => { if(c.branch) branchSet.add(c.branch); });
       BRANCHES = Array.from(branchSet).sort();
+      recomputeMoMData(contracts, vacancy);
       try {
         const n = BRANCHES.length;
         document.querySelectorAll('#dyn-branches').forEach(el => el.textContent = n);
